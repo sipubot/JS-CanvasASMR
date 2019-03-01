@@ -180,13 +180,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (BG.BgPos[idx][2] > BG.BgPicChangeSize * 0.5) {
             //bigger image Set
         }
-        if (BG.BgPos[idx][2] > BG.BgPicChangeSize) {
-            userChangeTarget(-1, BG.SetPath.x, BG.SetPath.y);
-            var outP = BG.BgPic.pop();
-            var outPos = BG.BgPos.pop();
-            BG.BgOutPic = [outP, outPos.slice(0)];
-            USER.Target = -1;
-        }
         //fetch size & position
         BG.BgPos[idx][2] = BG.BgPicSize + (timespan / 10000);
         if (BG.BgPos[idx][1] - BG.BgPos[idx][2] < 0) {
@@ -201,6 +194,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 }
             }
         });
+		//remover
+        if (BG.BgPos[idx][2] > BG.BgPicChangeSize) {
+            userChangeTarget(-1, BG.SetPath.x, BG.SetPath.y);
+            var outP = BG.BgPic.pop();
+            var outPos = BG.BgPos.pop();
+            BG.BgOutPic = [outP, outPos.slice(0)];
+            USER.Target = -1;
+        }
     }
 
     function fetchPath(dt) {
@@ -284,7 +285,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function LoadData() {
-        loadJSON('/can/data.json',
+        loadJSON('/data/data.json',
             function (data) {
                 //BG.BgPic = data.Pic;
                 data.Pic.map((a, i) => {
