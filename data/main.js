@@ -42,8 +42,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
     var BG = {
         BgColor: "black",
         GroundColor: "green",
-        Path: { x: 200, y: 400 },
-        SetPath: { x: 600, y: 400 },
+        Path: { x: 400, y: 400 },
+        SetPath: { x: 400, y: 400 },
         BgPicSize: 18,
         BgPicHarfSize: 9,
         BgPicChangeSize: 600,
@@ -56,9 +56,19 @@ var SipuViewer = (function (SipuViewer, undefined) {
         BG.BgPos = Array.apply(null, Array(len))
             .map(a => [getRandomInt(0, 800), getRandomInt(300, 380), BG.BgPicSize]);
     };
-    var OBBG = {
+    var OBJBG = {
+        OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
+        PIC: {},
+        POS: {}
+    };
+    OBJBG.SetBgObjPos = function () {
+        OBJBG.POS["MOUNTAIN2"] = [400,0]
+    };
 
-    }
+    var OBJITEM = {
+        OBJLIST: ["APPLE", "BUTTERFLY", "CARROT", "STRAWBERRY", "LIKE"],
+        PIC: {}
+    };
 
     var USERSTATE = {
         Walk: 1,
@@ -90,7 +100,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     Canvas.update = function () {
         var dt = arguments[0];
         fetchBg(dt);
-        //fetchBgObj(dt);
+        fetchBgObj(dt);
         fetchPath(dt);
         fetchTarget(USER.Target);
     };
@@ -99,10 +109,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //need draw center
         var dt = arguments[0];
         drawBg();
-        //drawBgObj();
+        drawBgObj();
         drawPath();
         drawBgPic();
         drawBgOutPic();
+        drawAllTimeColor();
     };
     /***
      *  Sub Function obj draw & obj fetch 
@@ -171,6 +182,19 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
     }
 
+    function fetchBgObj(dt) {
+        if (USER.State !== USERSTATE.Walk) { return; }
+        var oneStep = dt * 1;
+        if (399 > BG.Path.x) {
+            OBJBG.POS["MOUNTAIN2"][0] += oneStep;
+        }
+        if (400 < BG.Path.x) {
+            OBJBG.POS["MOUNTAIN2"][0] -= oneStep;
+        }
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > 800 ? OBJBG.POS["MOUNTAIN2"][0] % 800 : OBJBG.POS["MOUNTAIN2"][0];
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0 ? OBJBG.POS["MOUNTAIN2"][0] + 800 : OBJBG.POS["MOUNTAIN2"][0];
+    }
+
     function fetchTarget(idx) {
         if (idx === -1 || idx == undefined) { return; }
         //onUser Not Walking Stop
@@ -184,7 +208,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         BG.BgPos[idx][2] = BG.BgPicSize + (timespan / 10000);
         if (BG.BgPos[idx][1] - BG.BgPos[idx][2] < 0) {
             BG.BgPos[idx][1] += 0.7;
-        } 
+        }
         //fetch other
         BG.BgPos.map((a, i) => {
             if (a[2] > BG.BgPicSize && i < BG.BgPos.length - 1) {
@@ -194,7 +218,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 }
             }
         });
-		//remover
+        //remover
         if (BG.BgPos[idx][2] > BG.BgPicChangeSize) {
             userChangeTarget(-1, BG.SetPath.x, BG.SetPath.y);
             var outP = BG.BgPic.pop();
@@ -225,7 +249,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function drawBg() {
-
         var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, 400);
         grdSky.addColorStop(0, "#59a6e0");
         grdSky.addColorStop(1, "#a7d0ef");
@@ -237,6 +260,23 @@ var SipuViewer = (function (SipuViewer, undefined) {
         grdLand.addColorStop(1, "#79ba53");
         Canvas.ctx.fillStyle = grdLand;
         Canvas.ctx.fillRect(0, 400, 800, 600);
+    }
+
+    function drawBgObj() {
+        var mp = OBJBG.POS["MOUNTAIN2"];
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0]-800, mp[1]+129, 800, 300);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1]+129, 800, 300);
+        //Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["MOON"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["STAR"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["APPLE"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["CARROT"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], 0, 200, 800, 400);
+
     }
 
     function drawPath() {
@@ -284,23 +324,51 @@ var SipuViewer = (function (SipuViewer, undefined) {
         BG.BgOutPic[1][1] -= 1;
     }
 
-    function LoadData() {
-        loadJSON('/data/data.json',
-            function (data) {
-                //BG.BgPic = data.Pic;
-                data.Pic.map((a, i) => {
-                    BG.BgPic.push(new Image());
-                    BG.BgPic[i].src = 'data:image/png;base64,' + a;
-                });
-                BG.SetBgPic();
-                return initData();
-            },
-            function (xhr) { console.error(xhr); }
-        );
-
+    function drawAllTimeColor() {
+        Canvas.ctx.globalAlpha = 0.2;
+        Canvas.ctx.fillStyle = '#2a1844';
+        Canvas.ctx.fillRect(0, 0, 800, 600);
+        Canvas.ctx.globalAlpha = 1;
     }
 
-    function initData() {
+    function LoadData(f) {
+        var pngaddcode = "data:image/png;base64,";
+        var svgaddcode = "data:image/svg+xml;base64,";
+        var count = 0;
+        var counter = function (num) {
+            count++;
+            if (count+1 === f.length) {
+                return loadComplete();
+            }
+        };
+        f.map(a => {
+            loadJSON("/data/" + a, function (data) {
+                if (a === "data.json") {
+                    data.Pic.map((a, i) => {
+                        BG.BgPic.push(new Image());
+                        BG.BgPic[i].src = pngaddcode + a;
+                    });
+                    BG.SetBgPic();
+                }
+                if (a === "bgobj.json") {
+                    Object.entries(data).map(a => {
+                        OBJBG.PIC[a[0]] = new Image();
+                        OBJBG.PIC[a[0]].src = svgaddcode + a[1];
+                    });
+                    OBJBG.SetBgObjPos();
+                }
+                if (a === "itemobj.json") {
+                    Object.entries(data).map(a => {
+                        OBJITEM.PIC[a[0]] = new Image();
+                        OBJITEM.PIC[a[0]].src = svgaddcode + a[1];
+                    });
+                }
+                counter();
+            }, function (xhr) { console.error(xhr); });
+        });
+    }
+
+    function loadComplete() {
         Canvas.init();
         SipuViewer.intervalId = setInterval(function () {
             CanvasLoop(Canvas);
@@ -308,7 +376,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     SipuViewer.main = function () {
-        LoadData();
+        var files = ["bgobj.json", "itemobj.json", "data.json"];
+        LoadData(files);
     };
     return SipuViewer;
 })(window.SipuViewer || {});
