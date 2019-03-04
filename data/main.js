@@ -44,6 +44,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Night: 2
     };
     var COLOR = {
+        AIR : {},
         SKY :{TOP:"rgba()",BOTTOM:"rgba()"},
         LAND :{TOP:"rgba()",BOTTOM:"rgba()"}
         
