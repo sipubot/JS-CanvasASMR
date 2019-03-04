@@ -26,7 +26,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function rgbToHex(rgb) {
         var hex = rgb.map(a => a.toString(16).length == 1 ? "0" + a.toString(16) : a.toString(16));
-        return "#"+hex.join('');
+        return "#" + hex.join('');
     }
     /***
      * Init Enviroment
@@ -40,36 +40,35 @@ var SipuViewer = (function (SipuViewer, undefined) {
      * Init Object 
      */
     var BGSTATE = {
-        Day: 1,
-        Night: 2
+        DAY: 1,
+        NIGHT: 2,
+        MORNING: 3,
+        EVENING: 4
     };
     var COLOR = {
-        AIR : {},
-        SKY :{TOP:"rgba()",BOTTOM:"rgba()"},
-        LAND :{TOP:"rgba()",BOTTOM:"rgba()"}
-        
+        AIR: [11, 3, 32],
+        AIROPACITY: 0.7,
+        SKY: { TOP: [], BOTTOM: [] },
+        LAND: { TOP: [], BOTTOM: [] }
     };
-    var BG = {
-        AirColor: [11, 3, 32],
-        AirOpacity: 0.7,
-        GroundColor: "green",
+    var OBJMOD = {
         Path: { x: 400, y: 400 },
         SetPath: { x: 400, y: 400 },
-        BgPicSize: 18,
-        BgPicHarfSize: 9,
-        BgPicChangeSize: 600,
-        BgOutPic: [],
-        BgPic: [],
-        BgPos: []
+        PicSize: 18,
+        PicHarfSize: 9,
+        PicChangeSize: 600,
+        OutPic: [],
+        Pic: [],
+        Pos: []
     };
-    BG.SetBgPic = function () {
-        var len = BG.BgPic.length;
-        BG.BgPos = Array.apply(null, Array(len))
-            .map(a => [getRandomInt(0, 800), getRandomInt(300, 380), BG.BgPicSize]);
+    OBJMOD.SetBgPic = function () {
+        var len = OBJMOD.Pic.length;
+        OBJMOD.Pos = Array.apply(null, Array(len))
+            .map(a => [getRandomInt(0, 800), getRandomInt(300, 380), OBJMOD.PicSize]);
     };
     var OBJBG = {
         OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
-        CPT : {},
+        CPT: {},
         PIC: {},
         POS: {}
     };
@@ -143,10 +142,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var clk_X = e.clientX - Canvas.bound.left;
         var clk_Y = e.clientY - Canvas.bound.top;
         var chkidx = -1;
-        BG.BgPos.map((a, i) => {
-            if (a[0] - BG.BgPicHarfSize < clk_X
-                && a[0] + BG.BgPicHarfSize > clk_X
-                && a[1] - BG.BgPicSize < clk_Y
+        OBJMOD.Pos.map((a, i) => {
+            if (a[0] - OBJMOD.PicHarfSize < clk_X
+                && a[0] + OBJMOD.PicHarfSize > clk_X
+                && a[1] - OBJMOD.PicSize < clk_Y
                 && a[1] > clk_Y
             ) {
                 chkidx = i;
@@ -161,12 +160,12 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (idx === -1) { USER.Target = -1; return; }
         if (USER.Target !== idx) {
             USER.TimeSet = new Date();
-            var tempPos = BG.BgPos[idx];
-            BG.BgPos.splice(idx, 1);
-            BG.BgPos.push(tempPos);
-            USER.Target = BG.BgPos.length - 1;
-            BG.SetPath.x = x;
-            BG.SetPath.y = y;
+            var tempPos = OBJMOD.Pos[idx];
+            OBJMOD.Pos.splice(idx, 1);
+            OBJMOD.Pos.push(tempPos);
+            USER.Target = OBJMOD.Pos.length - 1;
+            OBJMOD.SetPath.x = x;
+            OBJMOD.SetPath.y = y;
             console.log(USER.TimeSet, idx);
         }
     }
@@ -174,26 +173,26 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function fetchBg(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
-        if (399 > BG.Path.x) {
-            BG.BgPos = BG.BgPos.map(a => {
+        if (399 > OBJMOD.Path.x) {
+            OBJMOD.Pos = OBJMOD.Pos.map(a => {
                 a[0] += oneStep;
                 if (a[0] > 800) {
                     a[0] -= 800;
                 }
                 return a;
             });
-            BG.Path.x += oneStep;
-            BG.SetPath.x += oneStep;
+            OBJMOD.Path.x += oneStep;
+            OBJMOD.SetPath.x += oneStep;
         }
-        if (400 < BG.Path.x) {
-            BG.BgPos.map(a => {
+        if (400 < OBJMOD.Path.x) {
+            OBJMOD.Pos.map(a => {
                 a[0] -= oneStep;
                 if (a[0] < 0) {
                     a[0] += 800;
                 }
             });
-            BG.Path.x -= oneStep;
-            BG.SetPath.x -= oneStep;
+            OBJMOD.Path.x -= oneStep;
+            OBJMOD.SetPath.x -= oneStep;
         }
     }
 
@@ -217,67 +216,67 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (USER.State !== USERSTATE.Walk) { return; }
 
         var timespan = new Date().getTime() - USER.TimeSet.getTime();
-        if (BG.BgPos[idx][2] > BG.BgPicChangeSize * 0.5) {
+        if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
             //bigger image Set
         }
         //fetch size & position
-        BG.BgPos[idx][2] = BG.BgPicSize + (timespan / 10000);
-        if (BG.BgPos[idx][1] - BG.BgPos[idx][2] < 0) {
-            BG.BgPos[idx][1] += 0.7;
+        OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 10000);
+        if (OBJMOD.Pos[idx][1] - OBJMOD.Pos[idx][2] < 0) {
+            OBJMOD.Pos[idx][1] += 0.7;
         }
         //fetch other
-        BG.BgPos.map((a, i) => {
-            if (a[2] > BG.BgPicSize && i < BG.BgPos.length - 1) {
-                BG.BgPos[i][2] -= 0.7;
-                if (BG.BgPos[i][2] < BG.BgPicSize) {
-                    BG.BgPos[i][2] = BG.BgPicSize;
+        OBJMOD.Pos.map((a, i) => {
+            if (a[2] > OBJMOD.PicSize && i < OBJMOD.Pos.length - 1) {
+                OBJMOD.Pos[i][2] -= 0.7;
+                if (OBJMOD.Pos[i][2] < OBJMOD.PicSize) {
+                    OBJMOD.Pos[i][2] = OBJMOD.PicSize;
                 }
             }
         });
         //remover
-        if (BG.BgPos[idx][2] > BG.BgPicChangeSize) {
-            userChangeTarget(-1, BG.SetPath.x, BG.SetPath.y);
-            var outP = BG.BgPic.pop();
-            var outPos = BG.BgPos.pop();
-            BG.BgOutPic = [outP, outPos.slice(0)];
+        if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize) {
+            userChangeTarget(-1, OBJMOD.SetPath.x, OBJMOD.SetPath.y);
+            var outP = OBJMOD.Pic.pop();
+            var outPos = OBJMOD.Pos.pop();
+            OBJMOD.OutPic = [outP, outPos.slice(0)];
             USER.Target = -1;
         }
     }
 
     function drawBgPic() {
-        BG.BgPos.map((a, i) => {
-            if (a[2] === BG.BgPicSize) {
-                Canvas.ctx.drawImage(BG.BgPic[i], (a[0] - BG.BgPicHarfSize), (a[1] - BG.BgPicSize));
+        OBJMOD.Pos.map((a, i) => {
+            if (a[2] === OBJMOD.PicSize) {
+                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicSize));
             } else {
-                Canvas.ctx.drawImage(BG.BgPic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]);
+                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]);
             }
         });
     }
 
     function drawBgOutPic() {
-        if (BG.BgOutPic.length === 0) { return; }
-        if (BG.BgOutPic[1][1] < 1) { BG.BgOutPic = []; return; }
+        if (OBJMOD.OutPic.length === 0) { return; }
+        if (OBJMOD.OutPic[1][1] < 1) { OBJMOD.OutPic = []; return; }
         Canvas.ctx.drawImage(
-            BG.BgOutPic[0],
-            (BG.BgOutPic[1][0] - (BG.BgOutPic[1][2] * 0.5)),
-            (BG.BgOutPic[1][1] - BG.BgOutPic[1][2]),
-            BG.BgOutPic[1][2], BG.BgOutPic[1][2]
+            OBJMOD.OutPic[0],
+            (OBJMOD.OutPic[1][0] - (OBJMOD.OutPic[1][2] * 0.5)),
+            (OBJMOD.OutPic[1][1] - OBJMOD.OutPic[1][2]),
+            OBJMOD.OutPic[1][2], OBJMOD.OutPic[1][2]
         );
-        BG.BgOutPic[1][1] -= 1;
+        OBJMOD.OutPic[1][1] -= 1;
     }
 
     function fetchPath(dt) {
         var oneStep = dt * 20;
-        var onside = BG.Path.x || 0;
-        var goal = BG.SetPath.x || 0;
+        var onside = OBJMOD.Path.x || 0;
+        var goal = OBJMOD.SetPath.x || 0;
         var gap = Math.abs(onside - goal);
         if (gap > 1) {
             //on Turn
             if (USER.State !== USERSTATE.Turn) { USER.State = USERSTATE.Turn; }
             if (oneStep < gap) {
-                BG.Path.x = onside > goal ? onside - oneStep : onside + oneStep;
+                OBJMOD.Path.x = onside > goal ? onside - oneStep : onside + oneStep;
             } else {
-                BG.Path.x = onside > goal ? onside - gap : onside + gap;
+                OBJMOD.Path.x = onside > goal ? onside - gap : onside + gap;
             }
         } else {
             //turn complete
@@ -300,10 +299,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
 
         Canvas.ctx.beginPath();
         Canvas.ctx.strokeStyle = "#5b3714";
-        Canvas.ctx.moveTo(BG.Path.x, 400);
+        Canvas.ctx.moveTo(OBJMOD.Path.x, 400);
         Canvas.ctx.bezierCurveTo(cpx11, cpy1, cpx12, cpy2, 200, 600);
         Canvas.ctx.lineTo(600, 600);
-        Canvas.ctx.bezierCurveTo(cpx22, cpy2, cpx21, cpy1, BG.Path.x, 400);
+        Canvas.ctx.bezierCurveTo(cpx22, cpy2, cpx21, cpy1, OBJMOD.Path.x, 400);
         Canvas.ctx.closePath();
         Canvas.ctx.fillStyle = grd;
         Canvas.ctx.fill();
@@ -312,15 +311,15 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function fetchBgObj(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
-        if (399 > BG.Path.x) {
+        if (399 > OBJMOD.Path.x) {
             OBJBG.POS["MOUNTAIN2"][0] += oneStep;
-            OBJBG.POS["CLOUD"].map((a,i) => {
+            OBJBG.POS["CLOUD"].map((a, i) => {
                 OBJBG.POS["CLOUD"][i][0] += oneStep;
             });
         }
-        if (400 < BG.Path.x) {
+        if (400 < OBJMOD.Path.x) {
             OBJBG.POS["MOUNTAIN2"][0] -= oneStep;
-            OBJBG.POS["CLOUD"].map((a,i) => {
+            OBJBG.POS["CLOUD"].map((a, i) => {
                 OBJBG.POS["CLOUD"][i][0] -= oneStep;
             });
         }
@@ -332,18 +331,18 @@ var SipuViewer = (function (SipuViewer, undefined) {
         /***
          * 추가적인 움직임 설정
          */
-        
-        OBJBG.POS["CLOUD"].map((a,i) => {
+
+        OBJBG.POS["CLOUD"].map((a, i) => {
             //크기에 비례하게 속도 조정
             OBJBG.POS["CLOUD"][i][0] -= oneStep * 0.02 * OBJBG.POS["CLOUD"][i][2];
         });
         //사라진 구름 다시 추가
-        OBJBG.POS["CLOUD"] = OBJBG.POS["CLOUD"].filter(a =>a[0]+a[2] > 0);
+        OBJBG.POS["CLOUD"] = OBJBG.POS["CLOUD"].filter(a => a[0] + a[2] > 0);
         if (OBJBG.POS["CLOUD"].length < OBJBG.CPT["CLOUD"]) {
             var add = OBJBG.POS["CLOUD"].length - OBJBG.CPT["CLOUD"];
-            OBJBG.POS["CLOUD"].push([800, getRandomInt(20,150), getRandomInt(30,50)]);
+            OBJBG.POS["CLOUD"].push([800, getRandomInt(20, 150), getRandomInt(30, 50)]);
         }
-        
+
     }
 
     function drawBgObj() {
@@ -367,8 +366,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function drawAllTimeColor() {
-        Canvas.ctx.globalAlpha = BG.AirOpacity;
-        Canvas.ctx.fillStyle = rgbToHex(BG.AirColor);
+        Canvas.ctx.globalAlpha = COLOR.AIROPACITY;
+        Canvas.ctx.fillStyle = rgbToHex(COLOR.AIR);
         Canvas.ctx.fillRect(0, 0, 800, 600);
         Canvas.ctx.globalAlpha = 1;
     }
@@ -387,10 +386,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
             loadJSON("data/" + a, function (data) {
                 if (a === "data.json") {
                     data.Pic.map((a, i) => {
-                        BG.BgPic.push(new Image());
-                        BG.BgPic[i].src = pngaddcode + a;
+                        OBJMOD.Pic.push(new Image());
+                        OBJMOD.Pic[i].src = pngaddcode + a;
                     });
-                    BG.SetBgPic();
+                    OBJMOD.SetBgPic();
                 }
                 if (a === "bgobj.json") {
                     Object.entries(data).map(a => {
