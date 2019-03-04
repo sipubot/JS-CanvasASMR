@@ -48,8 +48,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
     var COLOR = {
         AIR: [11, 3, 32],
         AIROPACITY: 0.7,
-        SKY: { TOP: [], BOTTOM: [] },
-        LAND: { TOP: [], BOTTOM: [] }
+        SKY: { TOP: rgbToHex([89, 166, 224]), BOTTOM: rgbToHex([167, 208, 239]) },
+        PATH: { TOP: rgbToHex([191, 181, 168]), BOTTOM: rgbToHex([91, 55, 20]) },
+        LAND: { TOP: rgbToHex([179, 211, 160]), BOTTOM: rgbToHex([121, 186, 83]) }
     };
     var OBJMOD = {
         Path: { x: 400, y: 400 },
@@ -197,14 +198,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
 
     function drawBg() {
         var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, 400);
-        grdSky.addColorStop(0, "#59a6e0");
-        grdSky.addColorStop(1, "#a7d0ef");
+        grdSky.addColorStop(0, COLOR.SKY.TOP);
+        grdSky.addColorStop(1, COLOR.SKY.BOTTOM);
         Canvas.ctx.fillStyle = grdSky;
         Canvas.ctx.fillRect(0, 0, 800, 400);
 
         var grdLand = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
-        grdLand.addColorStop(0, "#b3d3a0");
-        grdLand.addColorStop(1, "#79ba53");
+        grdLand.addColorStop(0, COLOR.LAND.TOP);
+        grdLand.addColorStop(1, COLOR.LAND.BOTTOM);
         Canvas.ctx.fillStyle = grdLand;
         Canvas.ctx.fillRect(0, 400, 800, 600);
     }
@@ -293,11 +294,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var cpx22 = 400;
 
         var grd = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
-        grd.addColorStop(0, "#bfb5a8");
-        grd.addColorStop(1, "#5b3714");
+        grd.addColorStop(0, COLOR.PATH.TOP);
+        grd.addColorStop(1, COLOR.PATH.BOTTOM);
 
         Canvas.ctx.beginPath();
-        Canvas.ctx.strokeStyle = "#5b3714";
+        Canvas.ctx.strokeStyle = COLOR.PATH.BOTTOM;
         Canvas.ctx.moveTo(OBJMOD.Path.x, 400);
         Canvas.ctx.bezierCurveTo(cpx11, cpy1, cpx12, cpy2, 200, 600);
         Canvas.ctx.lineTo(600, 600);
