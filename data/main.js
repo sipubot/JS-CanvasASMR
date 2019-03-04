@@ -53,13 +53,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     var OBJMOD = {
         Path: { x: 400, y: 400 },
-        SetPath: { x: 400, y: 400 },
+        PathSet: { x: 400, y: 400 },
+        Pic: [],
+        Pos: [],
         PicSize: 18,
         PicHarfSize: 9,
         PicChangeSize: 600,
-        OutPic: [],
-        Pic: [],
-        Pos: []
+        PicOut: []
     };
     OBJMOD.SetBgPic = function () {
         var len = OBJMOD.Pic.length;
@@ -78,7 +78,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
             .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
     };
-
     var OBJITEM = {
         OBJLIST: ["APPLE", "BUTTERFLY", "CARROT", "STRAWBERRY", "LIKE"],
         PIC: {}
@@ -92,7 +91,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     var USER = {
         Target: -1,
         TimeSet: new Date(),
-        State: USERSTATE.Turn,
+        State: USERSTATE.Walk,
         Energy: 100
     };
 
@@ -126,7 +125,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         drawPath();
         drawBgObj();
         drawBgPic();
-        drawBgOutPic();
+        drawBgPicOut();
         drawAllTimeColor();
     };
     /***
@@ -164,8 +163,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.Pos.splice(idx, 1);
             OBJMOD.Pos.push(tempPos);
             USER.Target = OBJMOD.Pos.length - 1;
-            OBJMOD.SetPath.x = x;
-            OBJMOD.SetPath.y = y;
+            OBJMOD.PathSet.x = x;
+            OBJMOD.PathSet.y = y;
             console.log(USER.TimeSet, idx);
         }
     }
@@ -182,7 +181,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 return a;
             });
             OBJMOD.Path.x += oneStep;
-            OBJMOD.SetPath.x += oneStep;
+            OBJMOD.PathSet.x += oneStep;
         }
         if (400 < OBJMOD.Path.x) {
             OBJMOD.Pos.map(a => {
@@ -192,7 +191,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 }
             });
             OBJMOD.Path.x -= oneStep;
-            OBJMOD.SetPath.x -= oneStep;
+            OBJMOD.PathSet.x -= oneStep;
         }
     }
 
@@ -235,10 +234,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
         //remover
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize) {
-            userChangeTarget(-1, OBJMOD.SetPath.x, OBJMOD.SetPath.y);
+            userChangeTarget(-1, OBJMOD.PathSet.x, OBJMOD.PathSet.y);
             var outP = OBJMOD.Pic.pop();
             var outPos = OBJMOD.Pos.pop();
-            OBJMOD.OutPic = [outP, outPos.slice(0)];
+            OBJMOD.PicOut = [outP, outPos.slice(0)];
             USER.Target = -1;
         }
     }
@@ -253,22 +252,22 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
     }
 
-    function drawBgOutPic() {
-        if (OBJMOD.OutPic.length === 0) { return; }
-        if (OBJMOD.OutPic[1][1] < 1) { OBJMOD.OutPic = []; return; }
+    function drawBgPicOut() {
+        if (OBJMOD.PicOut.length === 0) { return; }
+        if (OBJMOD.PicOut[1][1] < 1) { OBJMOD.PicOut = []; return; }
         Canvas.ctx.drawImage(
-            OBJMOD.OutPic[0],
-            (OBJMOD.OutPic[1][0] - (OBJMOD.OutPic[1][2] * 0.5)),
-            (OBJMOD.OutPic[1][1] - OBJMOD.OutPic[1][2]),
-            OBJMOD.OutPic[1][2], OBJMOD.OutPic[1][2]
+            OBJMOD.PicOut[0],
+            (OBJMOD.PicOut[1][0] - (OBJMOD.PicOut[1][2] * 0.5)),
+            (OBJMOD.PicOut[1][1] - OBJMOD.PicOut[1][2]),
+            OBJMOD.PicOut[1][2], OBJMOD.PicOut[1][2]
         );
-        OBJMOD.OutPic[1][1] -= 1;
+        OBJMOD.PicOut[1][1] -= 1;
     }
 
     function fetchPath(dt) {
         var oneStep = dt * 20;
         var onside = OBJMOD.Path.x || 0;
-        var goal = OBJMOD.SetPath.x || 0;
+        var goal = OBJMOD.PathSet.x || 0;
         var gap = Math.abs(onside - goal);
         if (gap > 1) {
             //on Turn
