@@ -24,6 +24,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         max = Math.floor(max);
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
+    function rgbToHex(rgb) {
+        var hex = rgb.map(a => a.toString(16).length == 1 ? "0" + a.toString(16) : a.toString(16));
+        return "#"+hex.join('');
+    }
     /***
      * Init Enviroment
      */
@@ -39,8 +43,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Day: 1,
         Night: 2
     };
+    var COLOR = {
+        SKY :{TOP:"rgba()",BOTTOM:"rgba()"},
+        LAND :{TOP:"rgba()",BOTTOM:"rgba()"}
+        
+    };
     var BG = {
-        BgColor: "black",
+        AirColor: [11, 3, 32],
+        AirOpacity: 0.7,
         GroundColor: "green",
         Path: { x: 400, y: 400 },
         SetPath: { x: 400, y: 400 },
@@ -58,11 +68,15 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     var OBJBG = {
         OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
+        CPT : {},
         PIC: {},
         POS: {}
     };
     OBJBG.SetBgObjPos = function () {
-        OBJBG.POS["MOUNTAIN2"] = [400,0]
+        OBJBG.POS["MOUNTAIN2"] = [400, 0];
+        OBJBG.CPT["CLOUD"] = 10;
+        OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
+            .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
     };
 
     var OBJITEM = {
@@ -100,8 +114,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
     Canvas.update = function () {
         var dt = arguments[0];
         fetchBg(dt);
-        fetchBgObj(dt);
         fetchPath(dt);
+        fetchBgObj(dt);
         fetchTarget(USER.Target);
     };
 
@@ -109,8 +123,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //need draw center
         var dt = arguments[0];
         drawBg();
-        drawBgObj();
         drawPath();
+        drawBgObj();
         drawBgPic();
         drawBgOutPic();
         drawAllTimeColor();
@@ -182,17 +196,18 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
     }
 
-    function fetchBgObj(dt) {
-        if (USER.State !== USERSTATE.Walk) { return; }
-        var oneStep = dt * 1;
-        if (399 > BG.Path.x) {
-            OBJBG.POS["MOUNTAIN2"][0] += oneStep;
-        }
-        if (400 < BG.Path.x) {
-            OBJBG.POS["MOUNTAIN2"][0] -= oneStep;
-        }
-        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > 800 ? OBJBG.POS["MOUNTAIN2"][0] % 800 : OBJBG.POS["MOUNTAIN2"][0];
-        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0 ? OBJBG.POS["MOUNTAIN2"][0] + 800 : OBJBG.POS["MOUNTAIN2"][0];
+    function drawBg() {
+        var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, 400);
+        grdSky.addColorStop(0, "#59a6e0");
+        grdSky.addColorStop(1, "#a7d0ef");
+        Canvas.ctx.fillStyle = grdSky;
+        Canvas.ctx.fillRect(0, 0, 800, 400);
+
+        var grdLand = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
+        grdLand.addColorStop(0, "#b3d3a0");
+        grdLand.addColorStop(1, "#79ba53");
+        Canvas.ctx.fillStyle = grdLand;
+        Canvas.ctx.fillRect(0, 400, 800, 600);
     }
 
     function fetchTarget(idx) {
@@ -228,6 +243,28 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
     }
 
+    function drawBgPic() {
+        BG.BgPos.map((a, i) => {
+            if (a[2] === BG.BgPicSize) {
+                Canvas.ctx.drawImage(BG.BgPic[i], (a[0] - BG.BgPicHarfSize), (a[1] - BG.BgPicSize));
+            } else {
+                Canvas.ctx.drawImage(BG.BgPic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]);
+            }
+        });
+    }
+
+    function drawBgOutPic() {
+        if (BG.BgOutPic.length === 0) { return; }
+        if (BG.BgOutPic[1][1] < 1) { BG.BgOutPic = []; return; }
+        Canvas.ctx.drawImage(
+            BG.BgOutPic[0],
+            (BG.BgOutPic[1][0] - (BG.BgOutPic[1][2] * 0.5)),
+            (BG.BgOutPic[1][1] - BG.BgOutPic[1][2]),
+            BG.BgOutPic[1][2], BG.BgOutPic[1][2]
+        );
+        BG.BgOutPic[1][1] -= 1;
+    }
+
     function fetchPath(dt) {
         var oneStep = dt * 20;
         var onside = BG.Path.x || 0;
@@ -246,37 +283,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             if (USER.State !== USERSTATE.Walk) { USER.State = USERSTATE.Walk; }
 
         }
-    }
-
-    function drawBg() {
-        var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, 400);
-        grdSky.addColorStop(0, "#59a6e0");
-        grdSky.addColorStop(1, "#a7d0ef");
-        Canvas.ctx.fillStyle = grdSky;
-        Canvas.ctx.fillRect(0, 0, 800, 400);
-
-        var grdLand = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
-        grdLand.addColorStop(0, "#b3d3a0");
-        grdLand.addColorStop(1, "#79ba53");
-        Canvas.ctx.fillStyle = grdLand;
-        Canvas.ctx.fillRect(0, 400, 800, 600);
-    }
-
-    function drawBgObj() {
-        var mp = OBJBG.POS["MOUNTAIN2"];
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0]-800, mp[1]+129, 800, 300);
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1]+129, 800, 300);
-        //Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJBG.PIC["MOON"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJBG.PIC["STAR"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJITEM.PIC["APPLE"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJITEM.PIC["CARROT"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], 0, 200, 800, 400);
-
     }
 
     function drawPath() {
@@ -302,31 +308,66 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.fill();
     }
 
-    function drawBgPic() {
-        BG.BgPos.map((a, i) => {
-            if (a[2] === BG.BgPicSize) {
-                Canvas.ctx.drawImage(BG.BgPic[i], (a[0] - BG.BgPicHarfSize), (a[1] - BG.BgPicSize));
-            } else {
-                Canvas.ctx.drawImage(BG.BgPic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]);
-            }
+    function fetchBgObj(dt) {
+        if (USER.State !== USERSTATE.Walk) { return; }
+        var oneStep = dt * 1;
+        if (399 > BG.Path.x) {
+            OBJBG.POS["MOUNTAIN2"][0] += oneStep;
+            OBJBG.POS["CLOUD"].map((a,i) => {
+                OBJBG.POS["CLOUD"][i][0] += oneStep;
+            });
+        }
+        if (400 < BG.Path.x) {
+            OBJBG.POS["MOUNTAIN2"][0] -= oneStep;
+            OBJBG.POS["CLOUD"].map((a,i) => {
+                OBJBG.POS["CLOUD"][i][0] -= oneStep;
+            });
+        }
+        /***
+         * 좌우 화면 연결
+         */
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > 800 ? OBJBG.POS["MOUNTAIN2"][0] % 800 : OBJBG.POS["MOUNTAIN2"][0];
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0 ? OBJBG.POS["MOUNTAIN2"][0] + 800 : OBJBG.POS["MOUNTAIN2"][0];
+        /***
+         * 추가적인 움직임 설정
+         */
+        
+        OBJBG.POS["CLOUD"].map((a,i) => {
+            //크기에 비례하게 속도 조정
+            OBJBG.POS["CLOUD"][i][0] -= oneStep * 0.02 * OBJBG.POS["CLOUD"][i][2];
         });
+        //사라진 구름 다시 추가
+        OBJBG.POS["CLOUD"] = OBJBG.POS["CLOUD"].filter(a =>a[0]+a[2] > 0);
+        if (OBJBG.POS["CLOUD"].length < OBJBG.CPT["CLOUD"]) {
+            var add = OBJBG.POS["CLOUD"].length - OBJBG.CPT["CLOUD"];
+            OBJBG.POS["CLOUD"].push([800, getRandomInt(20,150), getRandomInt(30,50)]);
+        }
+        
     }
 
-    function drawBgOutPic() {
-        if (BG.BgOutPic.length === 0) { return; }
-        if (BG.BgOutPic[1][1] < 1) { BG.BgOutPic = []; return; }
-        Canvas.ctx.drawImage(
-            BG.BgOutPic[0],
-            (BG.BgOutPic[1][0] - (BG.BgOutPic[1][2] * 0.5)),
-            (BG.BgOutPic[1][1] - BG.BgOutPic[1][2]),
-            BG.BgOutPic[1][2], BG.BgOutPic[1][2]
-        );
-        BG.BgOutPic[1][1] -= 1;
+    function drawBgObj() {
+        OBJBG.POS["CLOUD"].map(a => {
+            Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], a[0], a[1], a[2], a[2]);
+
+        });
+        var mp = OBJBG.POS["MOUNTAIN2"];
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - 800, mp[1] + 129, 800, 300);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, 800, 300);
+        //Canvas.ctx.drawImage(OBJBG.PIC["MOON"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["STAR"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["APPLE"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["CARROT"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], 0, 200, 800, 400);
+
     }
 
     function drawAllTimeColor() {
-        Canvas.ctx.globalAlpha = 0.2;
-        Canvas.ctx.fillStyle = '#2a1844';
+        Canvas.ctx.globalAlpha = BG.AirOpacity;
+        Canvas.ctx.fillStyle = rgbToHex(BG.AirColor);
         Canvas.ctx.fillRect(0, 0, 800, 600);
         Canvas.ctx.globalAlpha = 1;
     }
@@ -337,12 +378,12 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var count = 0;
         var counter = function (num) {
             count++;
-            if (count+1 === f.length) {
+            if (count + 1 === f.length) {
                 return loadComplete();
             }
         };
         f.map(a => {
-            loadJSON("/data/" + a, function (data) {
+            loadJSON("data/" + a, function (data) {
                 if (a === "data.json") {
                     data.Pic.map((a, i) => {
                         BG.BgPic.push(new Image());
