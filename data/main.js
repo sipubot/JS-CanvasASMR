@@ -28,13 +28,20 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var hex = rgb.map(a => a.toString(16).length == 1 ? "0" + a.toString(16) : a.toString(16));
         return "#" + hex.join('');
     }
+    function rgbComplementary(rgb) {
+        return [255 - rgb[0], 255 - rgb[1], 255 - rgb[2]];
+    }
+    function nowTime() {
+        var date = new Date()
+        return [date.getHours(), date.getMinutes()];
+    }
     /***
      * Init Enviroment
      */
     SipuViewer.init = {
         VER: "1.0",
         canvasID: "main_canvas",
-        fps: 60
+        fps: 30
     };
     /***
      * Init Object 
@@ -46,8 +53,34 @@ var SipuViewer = (function (SipuViewer, undefined) {
         EVENING: 4
     };
     var COLOR = {
-        AIR: [11, 3, 32],
-        AIROPACITY: 0.7,
+        AIR: [
+            [11, 3, 32, 0.7],
+            [11, 3, 32, 0.7],
+            [11, 3, 32, 0.7],
+            [11, 3, 32, 0.6],
+            [11, 3, 32, 0.5],
+            [98, 12, 116, 0.4],
+            [158, 40, 160, 0.3],
+            [226, 88, 153, 0.2],
+            [219, 179, 120, 0.1],
+            [232, 226, 187, 0],
+            [232, 226, 187, 0],
+            [232, 226, 187, 0],
+            [232, 226, 187, 0],
+            [232, 226, 187, 0],
+            [232, 226, 187, 0],
+            [232, 226, 187, 0],
+            [239, 217, 172, 0.2],
+            [242, 170, 104, 0.3],
+            [219, 78, 123, 0.4],
+            [68, 18, 91, 0.5],
+            [11, 3, 32, 0.6],
+            [11, 3, 32, 0.7],
+            [11, 3, 32, 0.7],
+            [11, 3, 32, 0.7],
+            [11, 3, 32, 0.7]
+        ],
+        NOWAIR: [],
         SKY: { TOP: rgbToHex([89, 166, 224]), BOTTOM: rgbToHex([167, 208, 239]) },
         PATH: { TOP: rgbToHex([191, 181, 168]), BOTTOM: rgbToHex([91, 55, 20]) },
         LAND: { TOP: rgbToHex([179, 211, 160]), BOTTOM: rgbToHex([121, 186, 83]) }
@@ -77,7 +110,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJBG.POS["MOUNTAIN2"] = [400, 0];
         OBJBG.CPT["CLOUD"] = 10;
         OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
-            .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
+        .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
+        OBJBG.CPT["STAR"] = 30;
+        OBJBG.POS["STAR"] = Array.apply(null, Array(OBJBG.CPT["STAR"]))
+        .map(a => [getRandomInt(0, 800), getRandomInt(0, 150), getRandomInt(2, 5)]);
+
     };
     var OBJITEM = {
         OBJLIST: ["APPLE", "BUTTERFLY", "CARROT", "STRAWBERRY", "LIKE"],
@@ -90,6 +127,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Turn: 3
     };
     var USER = {
+        Pos: [330, 520],
         Target: -1,
         TimeSet: new Date(),
         State: USERSTATE.Walk,
@@ -113,6 +151,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
 
     Canvas.update = function () {
         var dt = arguments[0];
+        fetchTime();
         fetchBg(dt);
         fetchPath(dt);
         fetchBgObj(dt);
@@ -125,9 +164,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         drawBg();
         drawPath();
         drawBgObj();
+        drawAllTimeColor();
+        drawBgfrontObj();
         drawBgPic();
         drawBgPicOut();
-        drawAllTimeColor();
     };
     /***
      *  Sub Function obj draw & obj fetch 
@@ -346,10 +386,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function drawBgObj() {
+        Canvas.ctx.globalAlpha = 1-COLOR.NOWAIR[3];
         OBJBG.POS["CLOUD"].map(a => {
             Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], a[0], a[1], a[2], a[2]);
-
         });
+        Canvas.ctx.globalAlpha = 1;
         var mp = OBJBG.POS["MOUNTAIN2"];
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - 800, mp[1] + 129, 800, 300);
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, 800, 300);
@@ -364,10 +405,34 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], 0, 200, 800, 400);
 
     }
+    function drawBgfrontObj (){
+        Canvas.ctx.globalAlpha = COLOR.NOWAIR[3];
+        OBJBG.POS["STAR"].map(a => {
+            Canvas.ctx.drawImage(OBJBG.PIC["STAR"], a[0], a[1], a[2], a[2]);
+        });
+        Canvas.ctx.globalAlpha = 1;
+    }
+
+    function fetchTime() {
+        //t[0] = hour, t[1] = min
+        var t = nowTime();
+        t = [22, 30];
+        var now = COLOR.AIR[t[0]];
+        var next = COLOR.AIR[t[0] % 24];
+        var p = t[1] * 0.167;
+        var c = [
+            now[0] + Math.floor((next[0] - now[0]) * p),
+            now[1] + Math.floor((next[1] - now[1]) * p),
+            now[2] + Math.floor((next[2] - now[2]) * p),
+            now[3]
+        ];
+        COLOR.NOWAIR = c;
+    }
 
     function drawAllTimeColor() {
-        Canvas.ctx.globalAlpha = COLOR.AIROPACITY;
-        Canvas.ctx.fillStyle = rgbToHex(COLOR.AIR);
+        //console.log()
+        Canvas.ctx.globalAlpha = COLOR.NOWAIR[3];
+        Canvas.ctx.fillStyle = rgbToHex(COLOR.NOWAIR.slice(0, 3));
         Canvas.ctx.fillRect(0, 0, 800, 600);
         Canvas.ctx.globalAlpha = 1;
     }
