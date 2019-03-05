@@ -416,7 +416,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function fetchTime() {
         //t[0] = hour, t[1] = min
         var t = nowTime();
-        t = [22, 30];
         var now = COLOR.AIR[t[0]];
         var next = COLOR.AIR[t[0] % 24];
         var p = t[1] * 0.167;
