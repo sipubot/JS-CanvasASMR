@@ -41,6 +41,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     SipuViewer.init = {
         VER: "1.0",
         canvasID: "main_canvas",
+        timefps : 60,
         fps: 30
     };
     /***
@@ -102,6 +103,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     var OBJBG = {
         OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
+        AIRTIMER : 0,
         CPT: {},
         PIC: {},
         POS: {}
@@ -151,7 +153,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
 
     Canvas.update = function () {
         var dt = arguments[0];
-        fetchTime();
+        fetchTime(dt);
         fetchBg(dt);
         fetchPath(dt);
         fetchBgObj(dt);
@@ -413,7 +415,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.globalAlpha = 1;
     }
 
-    function fetchTime() {
+    function fetchTime(dt) {
+        OBJBG.AIRTIMER -= dt;
+        if (OBJBG.AIRTIMER > 0) {
+            return;
+        }
+        OBJBG.AIRTIMER = SipuViewer.init.timefps;
+        //console.log(buffer);
         //t[0] = hour, t[1] = min
         var t = nowTime();
         var now = COLOR.AIR[t[0]];
