@@ -399,7 +399,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //draw now energy state
         Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], OBJITEM.POS["LIKE"][0], OBJITEM.POS["LIKE"][1], OBJITEM.POS["LIKE"][2], OBJITEM.POS["LIKE"][2]);
         Canvas.ctx.fillStyle = '#FD0';
-        Canvas.ctx.fillRect(660, 12, 104, 10);
+        Canvas.ctx.fillRect(660, 13, 104, 10);
         Canvas.ctx.fillStyle = '#e44';
         Canvas.ctx.fillRect(762 - USER.Energy, 14, USER.Energy, 6);
         //draw butter fly (no motion)
@@ -407,7 +407,12 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //eat item
         if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
-            Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], OBJITEM.LIFEADDPOS[0], OBJITEM.LIFEADDPOS[1], OBJITEM.LIFEADDPOS[2], OBJITEM.LIFEADDPOS[2]);
+            Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
+                OBJITEM.LIFEADDPOS[0] + OBJITEM.LIFEADDPOS[2] * 0.5,
+                OBJITEM.LIFEADDPOS[1] + OBJITEM.LIFEADDPOS[2] * 0.5,
+                OBJITEM.LIFEADDPOS[2],
+                OBJITEM.LIFEADDPOS[2]
+            );
             Canvas.ctx.globalAlpha = 1;
         }
     }
