@@ -25,7 +25,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     function rgbToHex(rgb) {
-        var hex = rgb.map(a => a.toString(16).length == 1 ? "0" + a.toString(16) : a.toString(16));
+        var hex = rgb.map(a => a.toString(16).length == 1 ?
+            "0" + a.toString(16) : a.toString(16));
         return "#" + hex.join('');
     }
     function rgbComplementary(rgb) {
@@ -255,7 +256,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 ) {
                     console.log("done");
                     eatitem = [key, i];
-                    USER.Energy = USER.Energy + OBJITEM.LIFE[key][i] > 100 ? 100 : USER.Energy + OBJITEM.LIFE[key][i];
+                    USER.Energy = USER.Energy + OBJITEM.LIFE[key][i] > 100 ?
+                        100 : USER.Energy + OBJITEM.LIFE[key][i];
                     OBJITEM.LIFEADDPOS = [clk_X, clk_Y, 20, 1];
                     //remove
                     OBJITEM.LIFE[key][i] = 0;
@@ -305,11 +307,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (1 === getRandomInt(0, 50) && OBJITEM.TARGET["BUTTERFLY"].length === 0) {
             var x = getRandomInt(100, 700);
             var y = getRandomInt(80, 520);
-            var lx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ? OBJITEM.POS["BUTTERFLY"][0] : x;
-            var rx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ? x : OBJITEM.POS["BUTTERFLY"][0];
-            var ty = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ? OBJITEM.POS["BUTTERFLY"][1] : y;
-            var by = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ? y : OBJITEM.POS["BUTTERFLY"][1];
-            var add = Array.apply(null, Array(5)).map(a => [getRandomInt(lx, rx), getRandomInt(ty, by), 18]);
+            var lx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ?
+                OBJITEM.POS["BUTTERFLY"][0] : x;
+            var rx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ?
+                x : OBJITEM.POS["BUTTERFLY"][0];
+            var ty = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ?
+                OBJITEM.POS["BUTTERFLY"][1] : y;
+            var by = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ?
+                y : OBJITEM.POS["BUTTERFLY"][1];
+            var add = Array.apply(null, Array(5))
+                .map(a => [getRandomInt(lx, rx), getRandomInt(ty, by), 18]);
             OBJITEM.TARGET["BUTTERFLY"] = add;
         }
         /***
@@ -397,13 +404,23 @@ var SipuViewer = (function (SipuViewer, undefined) {
             Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], a[0], a[1], a[2], a[2]);
         });
         //draw now energy state
-        Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], OBJITEM.POS["LIKE"][0], OBJITEM.POS["LIKE"][1], OBJITEM.POS["LIKE"][2], OBJITEM.POS["LIKE"][2]);
+        Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
+            OBJITEM.POS["LIKE"][0],
+            OBJITEM.POS["LIKE"][1],
+            OBJITEM.POS["LIKE"][2],
+            OBJITEM.POS["LIKE"][2]
+        );
         Canvas.ctx.fillStyle = '#FD0';
         Canvas.ctx.fillRect(660, 13, 104, 10);
         Canvas.ctx.fillStyle = '#e44';
         Canvas.ctx.fillRect(762 - USER.Energy, 14, USER.Energy, 6);
         //draw butter fly (no motion)
-        Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], OBJITEM.POS["BUTTERFLY"][0], OBJITEM.POS["BUTTERFLY"][1], OBJITEM.POS["BUTTERFLY"][2], OBJITEM.POS["BUTTERFLY"][2]);
+        Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"],
+            OBJITEM.POS["BUTTERFLY"][0],
+            OBJITEM.POS["BUTTERFLY"][1],
+            OBJITEM.POS["BUTTERFLY"][2],
+            OBJITEM.POS["BUTTERFLY"][2]
+        );
         //eat item
         if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
