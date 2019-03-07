@@ -249,7 +249,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         /***
          * 기존 아이템 페치
          */
-        var speed = dt;
+        var speed = dt*3;
         OBJITEM.LIFE["APPLE"] = OBJITEM.LIFE["APPLE"].map(a => a - speed);
         OBJITEM.LIFE["CARROT"] = OBJITEM.LIFE["CARROT"].map(a => a - speed);
         OBJITEM.LIFE["STRAWBERRY"] = OBJITEM.LIFE["STRAWBERRY"].map(a => a - speed);
@@ -291,7 +291,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         allitems += OBJITEM.PATH["APPLE"].length;
         allitems += OBJITEM.PATH["CARROT"].length;
         allitems += OBJITEM.PATH["STRAWBERRY"].length;
-        if (allitems > 2) { return; }
+        if (allitems > 0) { return; }
         OBJITEM.ITEMTIMER = SipuViewer.init.timefps * 10;
         if (Math.round(Math.random()) === 0) {
             return;
