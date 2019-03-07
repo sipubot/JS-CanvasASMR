@@ -408,8 +408,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
             Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
-                OBJITEM.LIFEADDPOS[0] + OBJITEM.LIFEADDPOS[2] * 0.5,
-                OBJITEM.LIFEADDPOS[1] + OBJITEM.LIFEADDPOS[2] * 0.5,
+                OBJITEM.LIFEADDPOS[0] - OBJITEM.LIFEADDPOS[2] * 0.5,
+                OBJITEM.LIFEADDPOS[1] - OBJITEM.LIFEADDPOS[2] * 0.5,
                 OBJITEM.LIFEADDPOS[2],
                 OBJITEM.LIFEADDPOS[2]
             );
