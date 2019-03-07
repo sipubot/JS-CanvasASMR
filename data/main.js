@@ -243,22 +243,25 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
         //eat Item
         var eatitem = [];
-        Object.keys(key => {
+        Object.keys(OBJITEM.POS).map(key => {
+            if ((key === "APPLE" || key === "CARROT" || key === "STRAWBERRY") === false) { return; }
             OBJITEM.POS[key].map((a, i) => {
+                console.log(OBJITEM.POS[key], clk_X, clk_Y);
                 if (
-                    a[0] + a[2] < clk_X
-                    && a[0] > clk_X
-                    && a[1] + a[2] > clk_Y
+                    a[0] < clk_X
+                    && a[0] + a[2] > clk_X
                     && a[1] < clk_Y
+                    && a[1] + a[2] > clk_Y
                 ) {
+                    console.log("done");
                     eatitem = [key, i];
-                    USER.Energy += OBJITEM.LIFE[key][i];
-                    USER.Energy = USER.Energy > 1000 ? 1000 : USER.Energy;
+                    USER.Energy = USER.Energy + OBJITEM.LIFE[key][i] > 100 ? 100 : USER.Energy + OBJITEM.LIFE[key][i];
                     OBJITEM.LIFEADDPOS = [clk_X, clk_Y, 20, 1];
+                    //remove
+                    OBJITEM.LIFE[key][i] = 0;
                 }
             });
         })
-        if (ii !== -1) { OBJITEM.POS[eatitem[0]].splice(eatitem[1], 1); }
     }
 
     function userChangeTarget(idx, x, y) {
@@ -280,9 +283,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         USER.Energy -= dt * 0.1;
         //eat item
         if (0 < OBJITEM.LIFEADDPOS.length) {
-            OBJITEM.LIFEADDPOS[3] -= dt*0.5;
-            OBJITEM.LIFEADDPOS[1] -= 2;
-            OBJITEM.LIFEADDPOS[2] += 2;
+            OBJITEM.LIFEADDPOS[3] -= dt * 0.5;
+            OBJITEM.LIFEADDPOS[1] -= 0.5;
+            OBJITEM.LIFEADDPOS[2] += 0.1;
             if (OBJITEM.LIFEADDPOS[3] <= 0.05) {
                 OBJITEM.LIFEADDPOS = [];
             }
@@ -402,9 +405,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //draw butter fly (no motion)
         Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], OBJITEM.POS["BUTTERFLY"][0], OBJITEM.POS["BUTTERFLY"][1], OBJITEM.POS["BUTTERFLY"][2], OBJITEM.POS["BUTTERFLY"][2]);
         //eat item
-        if (0 < OBJITEM.LIFEADDPOS.length) {
+        if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
-            Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], OBJITEM.LIFEADDPOS[0], OBJITEM.LIFEADDPOS[1], OBJITEM.LIFEADDPOS[2]);
+            Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], OBJITEM.LIFEADDPOS[0], OBJITEM.LIFEADDPOS[1], OBJITEM.LIFEADDPOS[2], OBJITEM.LIFEADDPOS[2]);
             Canvas.ctx.globalAlpha = 1;
         }
     }
