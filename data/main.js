@@ -41,6 +41,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
             Math.pow(1 - t, 3) * sy + 3 * t * Math.pow(1 - t, 2) * cp1y + 3 * t * t * (1 - t) * cp2y + t * t * t * ey
         ];
     }
+    function shuffle(a) {
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
     /***
      * Init Enviroment
      */
@@ -140,6 +147,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         PATH: {},
         LIFE: {},
         POS: {},
+        TARGET: {},
         PIC: {}
     };
     OBJITEM.SetPos = function () {
@@ -152,6 +160,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["APPLE"] = [];
         OBJITEM.POS["CARROT"] = [];
         OBJITEM.POS["STRAWBERRY"] = [];
+        OBJITEM.POS["LIKE"] = [770, 10, 16];
+        OBJITEM.POS["BUTTERFLY"] = [400, 300, 16];
+        OBJITEM.TARGET["BUTTERFLY"] = [];
     };
 
     var USERSTATE = {
@@ -246,10 +257,35 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function fetchItem(dt) {
+        //유저 에너지 감소
+        USER.Energy -= dt * 0.1;
+        //butterfly
+        if (0 < OBJITEM.TARGET["BUTTERFLY"].length) {
+            var flydis = getRandomInt(0,3) * dt * 10;
+            OBJITEM.POS["BUTTERFLY"][0] = OBJITEM.POS["BUTTERFLY"][0] > OBJITEM.TARGET["BUTTERFLY"][0][0] ? 
+                OBJITEM.POS["BUTTERFLY"][0] - flydis : OBJITEM.POS["BUTTERFLY"][0] + flydis;
+            OBJITEM.POS["BUTTERFLY"][1] = OBJITEM.POS["BUTTERFLY"][1] > OBJITEM.TARGET["BUTTERFLY"][0][1] ? 
+                OBJITEM.POS["BUTTERFLY"][1] - flydis : OBJITEM.POS["BUTTERFLY"][1] + flydis;
+            if (2 > Math.abs(OBJITEM.TARGET["BUTTERFLY"][0][0] - OBJITEM.POS["BUTTERFLY"][0]) 
+                && 2 > Math.abs(OBJITEM.TARGET["BUTTERFLY"][0][1] - OBJITEM.POS["BUTTERFLY"][1])) {
+                OBJITEM.TARGET["BUTTERFLY"].shift();
+            }
+        }
+        if (1 === getRandomInt(0, 50) && OBJITEM.TARGET["BUTTERFLY"].length === 0) {
+            console.log("fly");
+            var x = getRandomInt(100, 700);
+            var y = getRandomInt(80, 520);
+            var lx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ? OBJITEM.POS["BUTTERFLY"][0] : x;
+            var rx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ? x : OBJITEM.POS["BUTTERFLY"][0];
+            var ty = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ? OBJITEM.POS["BUTTERFLY"][1] : y;
+            var by = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ? y : OBJITEM.POS["BUTTERFLY"][1];
+            var add = Array.apply(null, Array(5)).map(a => [getRandomInt(lx, rx), getRandomInt(ty, by), 18]);
+            OBJITEM.TARGET["BUTTERFLY"] = add;
+        }
         /***
          * 기존 아이템 페치
          */
-        var speed = dt*3;
+        var speed = dt * 3;
         OBJITEM.LIFE["APPLE"] = OBJITEM.LIFE["APPLE"].map(a => a - speed);
         OBJITEM.LIFE["CARROT"] = OBJITEM.LIFE["CARROT"].map(a => a - speed);
         OBJITEM.LIFE["STRAWBERRY"] = OBJITEM.LIFE["STRAWBERRY"].map(a => a - speed);
@@ -262,7 +298,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var pos = OBJITEM.PATH["APPLE"][i][idx];
             var x = oripos[0] > pos[0] ? oripos[0] - 0.1 * speed : oripos[0] + 0.1 * speed;
             var y = oripos[1] + 0.1 * speed;
-            return [x, y, 20+idx];
+            return [x, y, 20 + idx];
         });
         OBJITEM.POS["CARROT"] = OBJITEM.LIFE["CARROT"].map((a, i) => {
             var idx = Math.floor((1000 - a) * 0.02);
@@ -270,7 +306,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var pos = OBJITEM.PATH["CARROT"][i][idx];
             var x = oripos[0] > pos[0] ? oripos[0] - 0.1 * speed : oripos[0] + 0.1 * speed;
             var y = oripos[1] + 0.1 * speed;
-            return [x, y, 20+idx];
+            return [x, y, 20 + idx];
         });
         OBJITEM.POS["STRAWBERRY"] = OBJITEM.LIFE["STRAWBERRY"].map((a, i) => {
             var idx = Math.floor((1000 - a) * 0.02);
@@ -278,7 +314,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var pos = OBJITEM.PATH["STRAWBERRY"][i][idx];
             var x = oripos[0] > pos[0] ? oripos[0] - 0.1 * speed : oripos[0] + 0.1 * speed;
             var y = oripos[1] + 0.1 * speed;
-            return [x, y, 20+idx];
+            return [x, y, 20 + idx];
         });
         /***
          * 신규 아이템 생성
@@ -330,6 +366,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["STRAWBERRY"].map(a => {
             Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], a[0], a[1], a[2], a[2]);
         });
+        //draw now energy state
+        Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], OBJITEM.POS["LIKE"][0], OBJITEM.POS["LIKE"][1], OBJITEM.POS["LIKE"][2], OBJITEM.POS["LIKE"][2]);
+        Canvas.ctx.fillStyle = '#FD0';
+        Canvas.ctx.fillRect(660, 12, 104, 10);
+        Canvas.ctx.fillStyle = '#e44';
+        Canvas.ctx.fillRect(762 - USER.Energy, 14, USER.Energy, 6);
+        //draw butter fly (no motion)
+        Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], OBJITEM.POS["BUTTERFLY"][0], OBJITEM.POS["BUTTERFLY"][1], OBJITEM.POS["BUTTERFLY"][2], OBJITEM.POS["BUTTERFLY"][2]);
     }
 
     function fetchBg(dt) {
@@ -534,7 +578,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //console.log(buffer);
         //t[0] = hour, t[1] = min
         var t = nowTime();
-        t = [20, 20];
+        //t = [20, 20];
         var now = COLOR.AIR[t[0]];
         var next = COLOR.AIR[t[0] % 24];
         var p = t[1] * 0.167;
