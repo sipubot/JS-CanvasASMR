@@ -35,13 +35,19 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var date = new Date()
         return [date.getHours(), date.getMinutes()];
     }
+    function getBezierXY(t, sx, sy, cp1x, cp1y, cp2x, cp2y, ex, ey) {
+        return [
+            Math.pow(1 - t, 3) * sx + 3 * t * Math.pow(1 - t, 2) * cp1x + 3 * t * t * (1 - t) * cp2x + t * t * t * ex,
+            Math.pow(1 - t, 3) * sy + 3 * t * Math.pow(1 - t, 2) * cp1y + 3 * t * t * (1 - t) * cp2y + t * t * t * ey
+        ];
+    }
     /***
      * Init Enviroment
      */
     SipuViewer.init = {
         VER: "1.0",
         canvasID: "main_canvas",
-        timefps : 60,
+        timefps: 60,
         fps: 30
     };
     /***
@@ -87,6 +93,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
         LAND: { TOP: rgbToHex([179, 211, 160]), BOTTOM: rgbToHex([121, 186, 83]) }
     };
     var OBJMOD = {
+        PATHPOINT: {
+            P1TX: 200,
+            P1TY: 450,
+            P1BX: 200,
+            P1BY: 550,
+            P2BX: 400,
+            P2BY: 550,
+            P2TX: 350,
+            P2TY: 450
+        },
         Path: { x: 400, y: 400 },
         PathSet: { x: 400, y: 400 },
         Pic: [],
@@ -103,7 +119,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     var OBJBG = {
         OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
-        AIRTIMER : 0,
+        AIRTIMER: 0,
         CPT: {},
         PIC: {},
         POS: {}
@@ -112,15 +128,30 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJBG.POS["MOUNTAIN2"] = [400, 0];
         OBJBG.CPT["CLOUD"] = 10;
         OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
-        .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
+            .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
         OBJBG.CPT["STAR"] = 30;
         OBJBG.POS["STAR"] = Array.apply(null, Array(OBJBG.CPT["STAR"]))
-        .map(a => [getRandomInt(0, 800), getRandomInt(0, 150), getRandomInt(2, 5)]);
+            .map(a => [getRandomInt(0, 800), getRandomInt(0, 150), getRandomInt(2, 5)]);
 
     };
     var OBJITEM = {
-        OBJLIST: ["APPLE", "BUTTERFLY", "CARROT", "STRAWBERRY", "LIKE"],
+        ITEMTIMER: 0,
+        OBJLIST: ["APPLE", "CARROT", "STRAWBERRY", "LIKE", "BUTTERFLY"],
+        PATH: {},
+        LIFE: {},
+        POS: {},
         PIC: {}
+    };
+    OBJITEM.SetPos = function () {
+        OBJITEM.PATH["APPLE"] = [];
+        OBJITEM.PATH["CARROT"] = [];
+        OBJITEM.PATH["STRAWBERRY"] = [];
+        OBJITEM.LIFE["APPLE"] = [];
+        OBJITEM.LIFE["CARROT"] = [];
+        OBJITEM.LIFE["STRAWBERRY"] = [];
+        OBJITEM.POS["APPLE"] = [];
+        OBJITEM.POS["CARROT"] = [];
+        OBJITEM.POS["STRAWBERRY"] = [];
     };
 
     var USERSTATE = {
@@ -158,6 +189,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         fetchPath(dt);
         fetchBgObj(dt);
         fetchTarget(USER.Target);
+        fetchItem(dt);
     };
 
     Canvas.draw = function () {
@@ -170,6 +202,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         drawBgfrontObj();
         drawBgPic();
         drawBgPicOut();
+        drawItem();
     };
     /***
      *  Sub Function obj draw & obj fetch 
@@ -210,6 +243,93 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.PathSet.y = y;
             console.log(USER.TimeSet, idx);
         }
+    }
+
+    function fetchItem(dt) {
+        /***
+         * 기존 아이템 페치
+         */
+        var speed = dt;
+        OBJITEM.LIFE["APPLE"] = OBJITEM.LIFE["APPLE"].map(a => a - speed);
+        OBJITEM.LIFE["CARROT"] = OBJITEM.LIFE["CARROT"].map(a => a - speed);
+        OBJITEM.LIFE["STRAWBERRY"] = OBJITEM.LIFE["STRAWBERRY"].map(a => a - speed);
+        OBJITEM.LIFE["APPLE"] = OBJITEM.LIFE["APPLE"].filter(a => a > 0);
+        OBJITEM.LIFE["CARROT"] = OBJITEM.LIFE["CARROT"].filter(a => a > 0);
+        OBJITEM.LIFE["STRAWBERRY"] = OBJITEM.LIFE["STRAWBERRY"].filter(a => a > 0);
+        OBJITEM.POS["APPLE"] = OBJITEM.LIFE["APPLE"].map((a, i) => {
+            var idx = Math.floor((1000 - a) * 0.02);
+            var oripos = OBJITEM.POS["APPLE"][i];
+            var pos = OBJITEM.PATH["APPLE"][i][idx];
+            var x = oripos[0] > pos[0] ? oripos[0] - 0.1 * speed : oripos[0] + 0.1 * speed;
+            var y = oripos[1] + 0.1 * speed;
+            return [x, y, 20+idx];
+        });
+        OBJITEM.POS["CARROT"] = OBJITEM.LIFE["CARROT"].map((a, i) => {
+            var idx = Math.floor((1000 - a) * 0.02);
+            var oripos = OBJITEM.POS["CARROT"][i];
+            var pos = OBJITEM.PATH["CARROT"][i][idx];
+            var x = oripos[0] > pos[0] ? oripos[0] - 0.1 * speed : oripos[0] + 0.1 * speed;
+            var y = oripos[1] + 0.1 * speed;
+            return [x, y, 20+idx];
+        });
+        OBJITEM.POS["STRAWBERRY"] = OBJITEM.LIFE["STRAWBERRY"].map((a, i) => {
+            var idx = Math.floor((1000 - a) * 0.02);
+            var oripos = OBJITEM.POS["STRAWBERRY"][i];
+            var pos = OBJITEM.PATH["STRAWBERRY"][i][idx];
+            var x = oripos[0] > pos[0] ? oripos[0] - 0.1 * speed : oripos[0] + 0.1 * speed;
+            var y = oripos[1] + 0.1 * speed;
+            return [x, y, 20+idx];
+        });
+        /***
+         * 신규 아이템 생성
+         */
+        OBJITEM.ITEMTIMER -= dt;
+        if (OBJITEM.ITEMTIMER > 0) {
+            return;
+        }
+        var allitems = 0;
+        allitems += OBJITEM.PATH["APPLE"].length;
+        allitems += OBJITEM.PATH["CARROT"].length;
+        allitems += OBJITEM.PATH["STRAWBERRY"].length;
+        if (allitems > 2) { return; }
+        OBJITEM.ITEMTIMER = SipuViewer.init.timefps * 10;
+        if (Math.round(Math.random()) === 0) {
+            return;
+        }
+        // 신규 아이템 들어갈때 item path를 산출해서 밀어 넣음
+        var il = { "0": "APPLE", "1": "CARROT", "2": "STRAWBERRY" };
+        var item = il[getRandomInt(0, 2) + ''];
+        var randEndX = getRandomInt(200, 600);
+        var path = Array.apply(null, Array(20)).map((a, i) =>
+            getBezierXY(
+                0.2 + (0.04 * i),
+                OBJMOD.Path.x,
+                400,
+                OBJMOD.PATHPOINT.P1TX,
+                OBJMOD.PATHPOINT.P1TY,
+                OBJMOD.PATHPOINT.P1BX,
+                OBJMOD.PATHPOINT.P1BY,
+                randEndX,
+                600
+            )
+        );
+        OBJITEM.PATH[item].push(path);
+        OBJITEM.LIFE[item].push(999);
+        OBJITEM.POS[item].push([path[0][0], path[0][1], 20]);
+        //console.log(dt)
+        console.log(item, OBJITEM.LIFE[item]);
+    }
+
+    function drawItem() {
+        OBJITEM.POS["APPLE"].map(a => {
+            Canvas.ctx.drawImage(OBJITEM.PIC["APPLE"], a[0], a[1], a[2], a[2]);
+        });
+        OBJITEM.POS["CARROT"].map(a => {
+            Canvas.ctx.drawImage(OBJITEM.PIC["CARROT"], a[0], a[1], a[2], a[2]);
+        });
+        OBJITEM.POS["STRAWBERRY"].map(a => {
+            Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], a[0], a[1], a[2], a[2]);
+        });
     }
 
     function fetchBg(dt) {
@@ -328,23 +448,15 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function drawPath() {
-        var cpy1 = 450;
-        var cpy2 = 550;
-        var cpx11 = 200;
-        var cpx12 = 200;
-        var cpx21 = 350;
-        var cpx22 = 400;
-
         var grd = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
         grd.addColorStop(0, COLOR.PATH.TOP);
         grd.addColorStop(1, COLOR.PATH.BOTTOM);
-
         Canvas.ctx.beginPath();
         Canvas.ctx.strokeStyle = COLOR.PATH.BOTTOM;
         Canvas.ctx.moveTo(OBJMOD.Path.x, 400);
-        Canvas.ctx.bezierCurveTo(cpx11, cpy1, cpx12, cpy2, 200, 600);
+        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P1TX, OBJMOD.PATHPOINT.P1TY, OBJMOD.PATHPOINT.P1BX, OBJMOD.PATHPOINT.P1BY, 200, 600);
         Canvas.ctx.lineTo(600, 600);
-        Canvas.ctx.bezierCurveTo(cpx22, cpy2, cpx21, cpy1, OBJMOD.Path.x, 400);
+        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P2BX, OBJMOD.PATHPOINT.P2BY, OBJMOD.PATHPOINT.P2TX, OBJMOD.PATHPOINT.P2TY, OBJMOD.Path.x, 400);
         Canvas.ctx.closePath();
         Canvas.ctx.fillStyle = grd;
         Canvas.ctx.fill();
@@ -388,7 +500,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
 
     function drawBgObj() {
-        Canvas.ctx.globalAlpha = 1-COLOR.NOWAIR[3];
+        Canvas.ctx.globalAlpha = 1 - COLOR.NOWAIR[3];
         OBJBG.POS["CLOUD"].map(a => {
             Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], a[0], a[1], a[2], a[2]);
         });
@@ -396,18 +508,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var mp = OBJBG.POS["MOUNTAIN2"];
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - 800, mp[1] + 129, 800, 300);
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, 800, 300);
-        //Canvas.ctx.drawImage(OBJBG.PIC["MOON"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJBG.PIC["STAR"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJITEM.PIC["APPLE"], 0, 200, 800, 400);
-        //Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJITEM.PIC["CARROT"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], 0, 200, 800, 400);
+        //Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"], 0, 200, 800, 400);
 
     }
-    function drawBgfrontObj (){
+    function drawBgfrontObj() {
         Canvas.ctx.globalAlpha = COLOR.NOWAIR[3];
         OBJBG.POS["STAR"].map(a => {
             Canvas.ctx.drawImage(OBJBG.PIC["STAR"], a[0], a[1], a[2], a[2]);
@@ -424,6 +534,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //console.log(buffer);
         //t[0] = hour, t[1] = min
         var t = nowTime();
+        t = [20, 20];
         var now = COLOR.AIR[t[0]];
         var next = COLOR.AIR[t[0] % 24];
         var p = t[1] * 0.167;
@@ -475,6 +586,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                         OBJITEM.PIC[a[0]] = new Image();
                         OBJITEM.PIC[a[0]].src = svgaddcode + a[1];
                     });
+                    OBJITEM.SetPos();
                 }
                 counter();
             }, function (xhr) { console.error(xhr); });
