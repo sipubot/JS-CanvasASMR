@@ -283,6 +283,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function fetchItem(dt) {
         //유저 에너지 감소
         USER.Energy -= dt * 0.1;
+        USER.Energy = USER.Energy < 0 ? 0 : USER.Energy;
         //eat item
         if (0 < OBJITEM.LIFEADDPOS.length) {
             OBJITEM.LIFEADDPOS[3] -= dt * 0.5;
