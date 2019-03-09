@@ -180,8 +180,38 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Energy: 100
     };
     USER.SetPos = function () {
-        USER.PosHead = 0;
-        USER.PosTail = 0;
+        USER.Mov = [
+            [0, 0, 0],
+            [0.05, -0.05, 0.02],
+            [0.25, -0.25, 0.03],
+            [0.50, -0.50, 0.07],
+            [1.00, -1.00, 0.12],
+            [1.70, -1.70, 0.17],
+            [2.00, -2.00, 0.22],
+            [2.00, -2.00, 0.30],
+            [1.90, -1.90, 0.35],
+            [1.80, -1.80, 0.40],
+            [1.70, -1.70, 0.50],
+            [1.60, -1.60, 0.65],
+            [1.50, -1.50, 0.75],
+            [1.40, -1.40, 1.00],
+            [1.30, -1.30, 0.92],
+            [1.20, -1.20, 0.95],
+            [1.10, -1.10, 0.92],
+            [1.00, -1.00, 0.85],
+            [0.90, -0.90, 0.70],
+            [0.80, -0.80, 0.67],
+            [0.70, -0.70, 0.50],
+            [0.60, -0.60, 0.37],
+            [0.50, -0.50, 0.32],
+            [0.50, -0.50, 0.27],
+            [0.40, -0.40, 0.20],
+            [0.30, -0.30, 0.15],
+            [0.25, -0.25, 0.10],
+            [0.15, -0.15, 0.07],
+            [0.10, -0.10, 0.05],
+            [0.05, -0.05, 0.02]
+        ];
     }
     var Canvas = {
         obj: document.getElementById(SipuViewer.init.canvasID)
@@ -232,8 +262,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function clickEvent(e) {
         var clk_X = e.clientX - Canvas.bound.left;
         var clk_Y = e.clientY - Canvas.bound.top;
-        userChangeTarget(clk_X, clk_y);
-        userEatItem(clk_X, clk_y);
+        userChangeTarget(clk_X, clk_Y);
+        userEatItem(clk_X, clk_Y);
     }
     function userChangeTarget(x, y) {
         var chkidx = -1;
@@ -284,16 +314,33 @@ var SipuViewer = (function (SipuViewer, undefined) {
         })
     }
     function fetchUser(dt) {
+        USER.MovIdx = (USER.MovIdx + 1) % 30;
     }
     function drawUser() {
         var a = USER.Pos;
-        Canvas.ctx.drawImage(USER.PIC["HEAD"], a[0]+12, a[1]-10+USER.PosHead, a[2]-12, a[2]-12);
-        Canvas.ctx.drawImage(USER.PIC["TAIL"], a[0]+14, a[1]+20+USER.PosTail, a[2]-16, a[2]-16);
-        Canvas.ctx.drawImage(USER.PIC["BODY"], a[0], a[1], a[2], a[2]);
+        var i = USER.MovIdx;
+        Canvas.ctx.drawImage(USER.PIC["HEAD"]
+            , a[0] + 12
+            , a[1] - 10 + USER.Mov[i][0]
+            , a[2] - 12
+            , a[2] - 12
+        );
+        Canvas.ctx.drawImage(USER.PIC["TAIL"]
+            , a[0] + 14
+            , a[1] + 20 + USER.Mov[i][1]
+            , a[2] - 16
+            , a[2] - 16
+        );
+        Canvas.ctx.drawImage(USER.PIC["BODY"]
+            , a[0]
+            , a[1] + USER.Mov[i][2]
+            , a[2]
+            , a[2]
+        );
     }
     function fetchRest(dt) {
         if (USER.State !== USERSTATE.Rest) { return; }
-        
+
     }
     function fetchItem(dt) {
         if (USERSTATE.Walk !== USER.State) { return; }
