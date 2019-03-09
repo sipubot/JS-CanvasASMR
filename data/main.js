@@ -180,6 +180,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Energy: 100
     };
     USER.SetPos = function () {
+        USER.PosRest = [20, -20, 2];
         USER.Mov = [
             [0, 0, 0],
             [0.05, -0.05, 0.02],
@@ -235,7 +236,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         fetchBgObj(dt);
         fetchTarget(USER.Target);
         fetchItem(dt);
-        fetchRest(dt);
         fetchUser(dt);
     };
     Canvas.draw = function () {
@@ -314,7 +314,60 @@ var SipuViewer = (function (SipuViewer, undefined) {
         })
     }
     function fetchUser(dt) {
-        USER.MovIdx = (USER.MovIdx + 1) % 30;
+        if (USER.State === USERSTATE.Rest) {
+            if (USER.MovIdx[0] < USER.PosRest[0]) {
+                USER.MovIdx[0] += dt;
+            }
+            if (USER.MovIdx[1] > USER.PosRest[1]) {
+                USER.MovIdx[1] -= dt;
+            }
+            if (USER.MovIdx[2] < USER.PosRest[2]) {
+                USER.MovIdx[2] += dt;
+            }
+            if (USER.Energy > 50) {
+                var rpos = USER.Mov[USER.MovIdx];
+                var spos = [false,false,false];
+                if (USER.MovIdx[0] > rpos[0]) {
+                    USER.MovIdx[0] -= dt;
+                } else {
+                    USER.MovIdx[0] = rpos[0];
+                    spos[0] = true;
+                }
+                if (USER.MovIdx[1] < rpos[1]) {
+                    USER.MovIdx[1] += dt;
+                } else {
+                    USER.MovIdx[1] = rpos[1];
+                    spos[1] = true;
+                }
+                if (USER.MovIdx[2] < rpos[2]) {
+                    USER.MovIdx[2] -= dt;
+                } else {
+                    USER.MovIdx[2] = rpos[2];
+                    spos[2] = true;
+                }
+                if (spos.every(a=a)) {
+                    USER.State = USERSTATE.Walk;
+                }
+            } else {
+                USER.Energy += dt;
+            }
+        }
+        if (USER.State === USERSTATE.Walk) {
+            //유저 에너지 감소
+            if (USER.Energy === 0) {
+                USER.State = USERSTATE.Rest;
+                return;
+            }
+            USER.Energy -= dt * 0.1;
+            USER.Energy = USER.Energy < 0 ? 0 : USER.Energy;
+            USER.MovIdx = (USER.MovIdx + 1) % 30;
+        }
+        if (USER.State === USERSTATE.Turn) {
+            if (USER.Energy === 0) {
+                USER.State = USERSTATE.Rest;
+                return;
+            }
+        }
     }
     function drawUser() {
         var a = USER.Pos;
@@ -338,15 +391,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
             , a[2]
         );
     }
-    function fetchRest(dt) {
-        if (USER.State !== USERSTATE.Rest) { return; }
-
-    }
     function fetchItem(dt) {
         if (USERSTATE.Walk !== USER.State) { return; }
-        //유저 에너지 감소
-        USER.Energy -= dt * 0.1;
-        USER.Energy = USER.Energy < 0 ? 0 : USER.Energy;
         //eat item
         if (0 < OBJITEM.LIFEADDPOS.length) {
             OBJITEM.LIFEADDPOS[3] -= dt * 0.5;
@@ -671,7 +717,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.globalAlpha = 1;
     }
     function fetchTime(dt) {
-        if (USER.Energy === 0 && USER.State !== USERSTATE.Rest) { USER.State = USERSTATE.Rest; }
         OBJBG.AIRTIMER -= dt;
         if (OBJBG.AIRTIMER > 0) {
             return;
