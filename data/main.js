@@ -140,7 +140,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJBG.CPT["STAR"] = 30;
         OBJBG.POS["STAR"] = Array.apply(null, Array(OBJBG.CPT["STAR"]))
             .map(a => [getRandomInt(0, 800), getRandomInt(0, 150), getRandomInt(2, 5)]);
-
     };
     var OBJITEM = {
         ITEMTIMER: 0,
@@ -166,20 +165,24 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["BUTTERFLY"] = [400, 300, 16];
         OBJITEM.TARGET["BUTTERFLY"] = [];
     };
-
     var USERSTATE = {
         Walk: 1,
         Rest: 2,
         Turn: 3
     };
     var USER = {
-        Pos: [330, 520],
+        PIC: {},
+        Pos: [300, 520, 50],
+        MovIdx: 0,
         Target: -1,
         TimeSet: new Date(),
         State: USERSTATE.Walk,
         Energy: 100
     };
-
+    USER.SetPos = function () {
+        USER.PosHead = 0;
+        USER.PosTail = 0;
+    }
     var Canvas = {
         obj: document.getElementById(SipuViewer.init.canvasID)
     };
@@ -191,10 +194,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx = Canvas.obj.getContext("2d");
         Canvas.bound = Canvas.obj.getBoundingClientRect();
         //init event
-        var rc = _.debounce(clickEvent, 1000);
+        var rc = clickEvent;
         Canvas.obj.addEventListener("click", rc, false);
     };
-
     Canvas.update = function () {
         var dt = arguments[0];
         fetchTime(dt);
@@ -203,8 +205,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         fetchBgObj(dt);
         fetchTarget(USER.Target);
         fetchItem(dt);
+        fetchRest(dt);
+        fetchUser(dt);
     };
-
     Canvas.draw = function () {
         //need draw center
         var dt = arguments[0];
@@ -216,6 +219,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         drawBgPic();
         drawBgPicOut();
         drawItem();
+        drawUser();
     };
     /***
      *  Sub Function obj draw & obj fetch 
@@ -225,62 +229,74 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.update(dt);
         Canvas.draw(dt, drawobj.ctx);
     }
-
     function clickEvent(e) {
         var clk_X = e.clientX - Canvas.bound.left;
         var clk_Y = e.clientY - Canvas.bound.top;
+        userChangeTarget(clk_X, clk_y);
+        userEatItem(clk_X, clk_y);
+    }
+    function userChangeTarget(x, y) {
         var chkidx = -1;
         OBJMOD.Pos.map((a, i) => {
-            if (a[0] - OBJMOD.PicHarfSize < clk_X
-                && a[0] + OBJMOD.PicHarfSize > clk_X
-                && a[1] - OBJMOD.PicSize < clk_Y
-                && a[1] > clk_Y
+            if (a[0] - OBJMOD.PicHarfSize < x
+                && a[0] + OBJMOD.PicHarfSize > x
+                && a[1] - OBJMOD.PicSize < y
+                && a[1] > y
             ) {
                 chkidx = i;
             }
         });
         if (chkidx !== -1) {
-            userChangeTarget(chkidx, clk_X, clk_Y);
+            if (USER.State !== USERSTATE.Walk) { return; }
+            if (idx === -1) { USER.Target = -1; return; }
+            if (USER.Target !== idx) {
+                USER.Progress = true;
+                USER.TimeSet = new Date();
+                var tempPos = OBJMOD.Pos[idx];
+                OBJMOD.Pos.splice(idx, 1);
+                OBJMOD.Pos.push(tempPos);
+                USER.Target = OBJMOD.Pos.length - 1;
+                OBJMOD.PathSet.x = x;
+                OBJMOD.PathSet.y = y;
+                console.log(USER.TimeSet, idx);
+            }
         }
-        //eat Item
-        var eatitem = [];
+    }
+    function userEatItem(x, y) {
         Object.keys(OBJITEM.POS).map(key => {
             if ((key === "APPLE" || key === "CARROT" || key === "STRAWBERRY") === false) { return; }
             OBJITEM.POS[key].map((a, i) => {
-                console.log(OBJITEM.POS[key], clk_X, clk_Y);
                 if (
-                    a[0] < clk_X
-                    && a[0] + a[2] > clk_X
-                    && a[1] < clk_Y
-                    && a[1] + a[2] > clk_Y
+                    a[0] < x
+                    && a[0] + a[2] > x
+                    && a[1] < y
+                    && a[1] + a[2] > y
                 ) {
-                    console.log("done");
-                    eatitem = [key, i];
-                    USER.Energy = USER.Energy + OBJITEM.LIFE[key][i] > 100 ?
-                        100 : USER.Energy + OBJITEM.LIFE[key][i];
-                    OBJITEM.LIFEADDPOS = [clk_X, clk_Y, 20, 1];
+                    if (USER.State !== USERSTATE.Walk) { return; }
+                    console.log(OBJITEM.POS[key], x, y);
+                    USER.Energy = USER.Energy + (OBJITEM.LIFE[kind][idx] * 0.1) > 100 ?
+                        100 : USER.Energy + (OBJITEM.LIFE[kind][idx] * 0.1);
+                    OBJITEM.LIFEADDPOS = [x - 12, y - 12, 20, 1];
                     //remove
                     OBJITEM.LIFE[key][i] = 0;
                 }
             });
         })
     }
-
-    function userChangeTarget(idx, x, y) {
-        if (idx === -1) { USER.Target = -1; return; }
-        if (USER.Target !== idx) {
-            USER.TimeSet = new Date();
-            var tempPos = OBJMOD.Pos[idx];
-            OBJMOD.Pos.splice(idx, 1);
-            OBJMOD.Pos.push(tempPos);
-            USER.Target = OBJMOD.Pos.length - 1;
-            OBJMOD.PathSet.x = x;
-            OBJMOD.PathSet.y = y;
-            console.log(USER.TimeSet, idx);
-        }
+    function fetchUser(dt) {
     }
-
+    function drawUser() {
+        var a = USER.Pos;
+        Canvas.ctx.drawImage(USER.PIC["HEAD"], a[0]+12, a[1]-10+USER.PosHead, a[2]-12, a[2]-12);
+        Canvas.ctx.drawImage(USER.PIC["TAIL"], a[0]+14, a[1]+20+USER.PosTail, a[2]-16, a[2]-16);
+        Canvas.ctx.drawImage(USER.PIC["BODY"], a[0], a[1], a[2], a[2]);
+    }
+    function fetchRest(dt) {
+        if (USER.State !== USERSTATE.Rest) { return; }
+        
+    }
     function fetchItem(dt) {
+        if (USERSTATE.Walk !== USER.State) { return; }
         //유저 에너지 감소
         USER.Energy -= dt * 0.1;
         USER.Energy = USER.Energy < 0 ? 0 : USER.Energy;
@@ -295,7 +311,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
         //butterfly
         if (0 < OBJITEM.TARGET["BUTTERFLY"].length) {
-            var flydis = getRandomInt(2, 4) * dt * 10;
+            var flydis = getRandomInt(2, 4) * dt * 5;
             OBJITEM.POS["BUTTERFLY"][0] = OBJITEM.POS["BUTTERFLY"][0] > OBJITEM.TARGET["BUTTERFLY"][0][0] ?
                 OBJITEM.POS["BUTTERFLY"][0] - flydis : OBJITEM.POS["BUTTERFLY"][0] + flydis;
             OBJITEM.POS["BUTTERFLY"][1] = OBJITEM.POS["BUTTERFLY"][1] > OBJITEM.TARGET["BUTTERFLY"][0][1] ?
@@ -393,7 +409,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //console.log(dt)
         console.log(item, OBJITEM.LIFE[item]);
     }
-
     function drawItem() {
         OBJITEM.POS["APPLE"].map(a => {
             Canvas.ctx.drawImage(OBJITEM.PIC["APPLE"], a[0], a[1], a[2], a[2]);
@@ -426,15 +441,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
             Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
-                OBJITEM.LIFEADDPOS[0] - OBJITEM.LIFEADDPOS[2] * 0.5,
-                OBJITEM.LIFEADDPOS[1] - OBJITEM.LIFEADDPOS[2] * 0.5,
+                OBJITEM.LIFEADDPOS[0],
+                OBJITEM.LIFEADDPOS[1],
                 OBJITEM.LIFEADDPOS[2],
                 OBJITEM.LIFEADDPOS[2]
             );
             Canvas.ctx.globalAlpha = 1;
         }
     }
-
     function fetchBg(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
@@ -460,26 +474,22 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.PathSet.x -= oneStep;
         }
     }
-
     function drawBg() {
         var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, 400);
         grdSky.addColorStop(0, COLOR.SKY.TOP);
         grdSky.addColorStop(1, COLOR.SKY.BOTTOM);
         Canvas.ctx.fillStyle = grdSky;
         Canvas.ctx.fillRect(0, 0, 800, 400);
-
         var grdLand = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
         grdLand.addColorStop(0, COLOR.LAND.TOP);
         grdLand.addColorStop(1, COLOR.LAND.BOTTOM);
         Canvas.ctx.fillStyle = grdLand;
         Canvas.ctx.fillRect(0, 400, 800, 600);
     }
-
     function fetchTarget(idx) {
         if (idx === -1 || idx == undefined) { return; }
         //onUser Not Walking Stop
         if (USER.State !== USERSTATE.Walk) { return; }
-
         var timespan = new Date().getTime() - USER.TimeSet.getTime();
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
             //bigger image Set
@@ -507,7 +517,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             USER.Target = -1;
         }
     }
-
     function drawBgPic() {
         OBJMOD.Pos.map((a, i) => {
             if (a[2] === OBJMOD.PicSize) {
@@ -517,7 +526,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             }
         });
     }
-
     function drawBgPicOut() {
         if (OBJMOD.PicOut.length === 0) { return; }
         if (OBJMOD.PicOut[1][1] < 1) { OBJMOD.PicOut = []; return; }
@@ -529,8 +537,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         );
         OBJMOD.PicOut[1][1] -= 1;
     }
-
     function fetchPath(dt) {
+        if (USER.State === USERSTATE.Rest) { return; }
         var oneStep = dt * 20;
         var onside = OBJMOD.Path.x || 0;
         var goal = OBJMOD.PathSet.x || 0;
@@ -548,7 +556,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             if (USER.State !== USERSTATE.Walk) { USER.State = USERSTATE.Walk; }
         }
     }
-
     function drawPath() {
         var grd = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
         grd.addColorStop(0, COLOR.PATH.TOP);
@@ -563,7 +570,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.fillStyle = grd;
         Canvas.ctx.fill();
     }
-
     function fetchBgObj(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
@@ -587,7 +593,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         /***
          * 추가적인 움직임 설정
          */
-
         OBJBG.POS["CLOUD"].map((a, i) => {
             //크기에 비례하게 속도 조정
             OBJBG.POS["CLOUD"][i][0] -= oneStep * 0.02 * OBJBG.POS["CLOUD"][i][2];
@@ -598,9 +603,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var add = OBJBG.POS["CLOUD"].length - OBJBG.CPT["CLOUD"];
             OBJBG.POS["CLOUD"].push([800, getRandomInt(20, 150), getRandomInt(30, 50)]);
         }
-
     }
-
     function drawBgObj() {
         Canvas.ctx.globalAlpha = 1 - COLOR.NOWAIR[3];
         OBJBG.POS["CLOUD"].map(a => {
@@ -612,7 +615,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, 800, 300);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
-
     }
     function drawBgfrontObj() {
         Canvas.ctx.globalAlpha = COLOR.NOWAIR[3];
@@ -621,8 +623,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
         Canvas.ctx.globalAlpha = 1;
     }
-
     function fetchTime(dt) {
+        if (USER.Energy === 0 && USER.State !== USERSTATE.Rest) { USER.State = USERSTATE.Rest; }
         OBJBG.AIRTIMER -= dt;
         if (OBJBG.AIRTIMER > 0) {
             return;
@@ -643,7 +645,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         ];
         COLOR.NOWAIR = c;
     }
-
     function drawAllTimeColor() {
         //console.log()
         Canvas.ctx.globalAlpha = COLOR.NOWAIR[3];
@@ -651,12 +652,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.fillRect(0, 0, 800, 600);
         Canvas.ctx.globalAlpha = 1;
     }
-
     function LoadData(f) {
         var pngaddcode = "data:image/png;base64,";
         var svgaddcode = "data:image/svg+xml;base64,";
         var count = 0;
-        var counter = function (num) {
+        var counter = function () {
             count++;
             if (count + 1 === f.length) {
                 return loadComplete();
@@ -685,20 +685,25 @@ var SipuViewer = (function (SipuViewer, undefined) {
                     });
                     OBJITEM.SetPos();
                 }
+                if (a === "snail.json") {
+                    Object.entries(data).map(a => {
+                        USER.PIC[a[0]] = new Image();
+                        USER.PIC[a[0]].src = svgaddcode + a[1];
+                    });
+                    USER.SetPos();
+                }
                 counter();
             }, function (xhr) { console.error(xhr); });
         });
     }
-
     function loadComplete() {
         Canvas.init();
         SipuViewer.intervalId = setInterval(function () {
             CanvasLoop(Canvas);
         }, 1000 / SipuViewer.init.fps);
     }
-
     SipuViewer.main = function () {
-        var files = ["bgobj.json", "itemobj.json", "data.json"];
+        var files = ["bgobj.json", "itemobj.json", "data.json", "snail.json"];
         LoadData(files);
     };
     return SipuViewer;
