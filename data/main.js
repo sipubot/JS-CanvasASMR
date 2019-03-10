@@ -304,8 +304,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 ) {
                     if (USER.State !== USERSTATE.Walk) { return; }
                     console.log(OBJITEM.POS[key], x, y);
-                    USER.Energy = USER.Energy + (OBJITEM.LIFE[kind][idx] * 0.1) > 100 ?
-                        100 : USER.Energy + (OBJITEM.LIFE[kind][idx] * 0.1);
+                    USER.Energy = USER.Energy + (OBJITEM.LIFE[key][idx] * 0.1) > 100 ?
+                        100 : USER.Energy + (OBJITEM.LIFE[key][idx] * 0.1);
                     OBJITEM.LIFEADDPOS = [x - 12, y - 12, 20, 1];
                     //remove
                     OBJITEM.LIFE[key][i] = 0;
