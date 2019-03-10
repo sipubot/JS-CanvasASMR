@@ -266,25 +266,28 @@ var SipuViewer = (function (SipuViewer, undefined) {
         userEatItem(clk_X, clk_Y);
     }
     function userChangeTarget(x, y) {
-        var chkidx = -1;
+        var idx = -1;
         OBJMOD.Pos.map((a, i) => {
             if (a[0] - OBJMOD.PicHarfSize < x
                 && a[0] + OBJMOD.PicHarfSize > x
                 && a[1] - OBJMOD.PicSize < y
                 && a[1] > y
             ) {
-                chkidx = i;
+                idx = i;
             }
         });
-        if (chkidx !== -1) {
+        if (idx !== -1) {
             if (USER.State !== USERSTATE.Walk) { return; }
             if (idx === -1) { USER.Target = -1; return; }
             if (USER.Target !== idx) {
-                USER.Progress = true;
+                USER.State = USERSTATE.Turn;
                 USER.TimeSet = new Date();
                 var tempPos = OBJMOD.Pos[idx];
+                var tempPic = OBJMOD.Pic[idx];
                 OBJMOD.Pos.splice(idx, 1);
+                OBJMOD.Pic.splice(idx, 1);
                 OBJMOD.Pos.push(tempPos);
+                OBJMOD.Pic.push(tempPic);
                 USER.Target = OBJMOD.Pos.length - 1;
                 OBJMOD.PathSet.x = x;
                 OBJMOD.PathSet.y = y;
@@ -613,9 +616,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function drawBgPic() {
         OBJMOD.Pos.map((a, i) => {
             if (a[2] === OBJMOD.PicSize) {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicSize));
+                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize*0.67),a[2],a[2]*0.67);
             } else {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]);
+                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]*0.67);
             }
         });
     }
