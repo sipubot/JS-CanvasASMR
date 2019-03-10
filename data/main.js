@@ -162,8 +162,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["CARROT"] = [];
         OBJITEM.POS["STRAWBERRY"] = [];
         OBJITEM.POS["LIKE"] = [770, 10, 16];
-        OBJITEM.POS["BUTTERFLY"] = [400, 300, 16];
+        OBJITEM.POS["BUTTERFLY"] = [400, 300, 20, 20];
         OBJITEM.TARGET["BUTTERFLY"] = [];
+        OBJITEM.TARGET.BUTTERFLYWING = true;
     };
     var USERSTATE = {
         Walk: 1,
@@ -231,11 +232,12 @@ var SipuViewer = (function (SipuViewer, undefined) {
     Canvas.update = function () {
         var dt = arguments[0];
         fetchTime(dt);
-        fetchBg(dt);
+        fetchBgPicPath(dt);
         fetchPath(dt);
         fetchBgObj(dt);
         fetchTarget(USER.Target);
         fetchItem(dt);
+        fetchButterFly(dt);
         fetchUser(dt);
     };
     Canvas.draw = function () {
@@ -249,6 +251,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         drawBgPic();
         drawBgPicOut();
         drawItem();
+        drawButterFly();
         drawUser();
     };
     /***
@@ -329,7 +332,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             }
             if (USER.Energy > 50) {
                 var rpos = USER.Mov[USER.MovIdx];
-                var spos = [false,false,false];
+                var spos = [false, false, false];
                 if (USER.MovIdx[0] > rpos[0]) {
                     USER.MovIdx[0] -= dt;
                 } else {
@@ -348,7 +351,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                     USER.MovIdx[2] = rpos[2];
                     spos[2] = true;
                 }
-                if (spos.every(a=a)) {
+                if (spos.every(a = a)) {
                     USER.State = USERSTATE.Walk;
                 }
             } else {
@@ -393,28 +396,38 @@ var SipuViewer = (function (SipuViewer, undefined) {
             , a[2]
             , a[2]
         );
+        //draw now energy state
+        Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
+            OBJITEM.POS["LIKE"][0],
+            OBJITEM.POS["LIKE"][1],
+            OBJITEM.POS["LIKE"][2],
+            OBJITEM.POS["LIKE"][2]
+        );
+        Canvas.ctx.fillStyle = '#FD0';
+        Canvas.ctx.fillRect(660, 13, 104, 10);
+        Canvas.ctx.fillStyle = '#e44';
+        Canvas.ctx.fillRect(762 - USER.Energy, 14, USER.Energy, 6);
     }
-    function fetchItem(dt) {
-        if (USERSTATE.Walk !== USER.State) { return; }
-        //eat item
-        if (0 < OBJITEM.LIFEADDPOS.length) {
-            OBJITEM.LIFEADDPOS[3] -= dt * 0.5;
-            OBJITEM.LIFEADDPOS[1] -= 0.5;
-            OBJITEM.LIFEADDPOS[2] += 0.1;
-            if (OBJITEM.LIFEADDPOS[3] <= 0.05) {
-                OBJITEM.LIFEADDPOS = [];
-            }
-        }
+    function fetchButterFly(dt) {
         //butterfly
         if (0 < OBJITEM.TARGET["BUTTERFLY"].length) {
-            var flydis = getRandomInt(2, 4) * dt * 5;
+            var flydisx = getRandomInt(2, 4) * dt * 2;
+            var flydisy = getRandomInt(2, 4) * dt * 2;
             OBJITEM.POS["BUTTERFLY"][0] = OBJITEM.POS["BUTTERFLY"][0] > OBJITEM.TARGET["BUTTERFLY"][0][0] ?
-                OBJITEM.POS["BUTTERFLY"][0] - flydis : OBJITEM.POS["BUTTERFLY"][0] + flydis;
+                OBJITEM.POS["BUTTERFLY"][0] - flydisx : OBJITEM.POS["BUTTERFLY"][0] + flydisx;
             OBJITEM.POS["BUTTERFLY"][1] = OBJITEM.POS["BUTTERFLY"][1] > OBJITEM.TARGET["BUTTERFLY"][0][1] ?
-                OBJITEM.POS["BUTTERFLY"][1] - flydis : OBJITEM.POS["BUTTERFLY"][1] + flydis;
+                OBJITEM.POS["BUTTERFLY"][1] - flydisy : OBJITEM.POS["BUTTERFLY"][1] + flydisy;
             if (2 > Math.abs(OBJITEM.TARGET["BUTTERFLY"][0][0] - OBJITEM.POS["BUTTERFLY"][0])
                 && 2 > Math.abs(OBJITEM.TARGET["BUTTERFLY"][0][1] - OBJITEM.POS["BUTTERFLY"][1])) {
                 OBJITEM.TARGET["BUTTERFLY"].shift();
+            }
+            //fly 
+            if (OBJITEM.TARGET.BUTTERFLYWING) {
+                OBJITEM.POS["BUTTERFLY"][2] -= dt * 30;
+                if (OBJITEM.POS["BUTTERFLY"][2] <= 1) { OBJITEM.TARGET.BUTTERFLYWING = false; }
+            } else {
+                OBJITEM.POS["BUTTERFLY"][2] += dt * 30;
+                if (OBJITEM.POS["BUTTERFLY"][2] >= 20) { OBJITEM.TARGET.BUTTERFLYWING = true; }
             }
         }
         if (1 === getRandomInt(0, 50) && OBJITEM.TARGET["BUTTERFLY"].length === 0) {
@@ -431,6 +444,28 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var add = Array.apply(null, Array(5))
                 .map(a => [getRandomInt(lx, rx), getRandomInt(ty, by), 18]);
             OBJITEM.TARGET["BUTTERFLY"] = add;
+        }
+    }
+    function drawButterFly() {
+        //draw butter fly (no motion)
+        Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"],
+            OBJITEM.POS["BUTTERFLY"][0] - OBJITEM.POS["BUTTERFLY"][2] * 0.5,
+            OBJITEM.POS["BUTTERFLY"][1],
+            OBJITEM.POS["BUTTERFLY"][2],
+            OBJITEM.POS["BUTTERFLY"][3]
+        );
+
+    }
+    function fetchItem(dt) {
+        if (USERSTATE.Walk !== USER.State) { return; }
+        //eat item
+        if (0 < OBJITEM.LIFEADDPOS.length) {
+            OBJITEM.LIFEADDPOS[3] -= dt * 0.5;
+            OBJITEM.LIFEADDPOS[1] -= 0.5;
+            OBJITEM.LIFEADDPOS[2] += 0.1;
+            if (OBJITEM.LIFEADDPOS[3] <= 0.05) {
+                OBJITEM.LIFEADDPOS = [];
+            }
         }
         /***
          * 기존 아이템 페치
@@ -502,7 +537,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.PATH[item].push(path);
         OBJITEM.LIFE[item].push(999);
         OBJITEM.POS[item].push([path[0][0], path[0][1], 20]);
-        //console.log(dt)
         console.log(item, OBJITEM.LIFE[item]);
     }
     function drawItem() {
@@ -515,24 +549,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["STRAWBERRY"].map(a => {
             Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], a[0], a[1], a[2], a[2]);
         });
-        //draw now energy state
-        Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
-            OBJITEM.POS["LIKE"][0],
-            OBJITEM.POS["LIKE"][1],
-            OBJITEM.POS["LIKE"][2],
-            OBJITEM.POS["LIKE"][2]
-        );
-        Canvas.ctx.fillStyle = '#FD0';
-        Canvas.ctx.fillRect(660, 13, 104, 10);
-        Canvas.ctx.fillStyle = '#e44';
-        Canvas.ctx.fillRect(762 - USER.Energy, 14, USER.Energy, 6);
-        //draw butter fly (no motion)
-        Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"],
-            OBJITEM.POS["BUTTERFLY"][0],
-            OBJITEM.POS["BUTTERFLY"][1],
-            OBJITEM.POS["BUTTERFLY"][2],
-            OBJITEM.POS["BUTTERFLY"][2]
-        );
         //eat item
         if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
@@ -545,7 +561,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             Canvas.ctx.globalAlpha = 1;
         }
     }
-    function fetchBg(dt) {
+    function fetchBgPicPath(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
         if (399 > OBJMOD.Path.x) {
@@ -616,9 +632,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function drawBgPic() {
         OBJMOD.Pos.map((a, i) => {
             if (a[2] === OBJMOD.PicSize) {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize*0.67),a[2],a[2]*0.67);
+                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize * 0.67), a[2], a[2] * 0.67);
             } else {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2]*0.67);
+                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
             }
         });
     }
