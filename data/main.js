@@ -351,7 +351,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                     USER.MovIdx[2] = rpos[2];
                     spos[2] = true;
                 }
-                if (spos.every(a = a)) {
+                if (spos.every(a=>a)) {
                     USER.State = USERSTATE.Walk;
                 }
             } else {
