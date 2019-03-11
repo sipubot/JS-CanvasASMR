@@ -29,9 +29,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             "0" + a.toString(16) : a.toString(16));
         return "#" + hex.join('');
     }
-    function rgbComplementary(rgb) {
-        return [255 - rgb[0], 255 - rgb[1], 255 - rgb[2]];
-    }
     function nowTime() {
         var date = new Date()
         return [date.getHours(), date.getMinutes()];
@@ -114,6 +111,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Path: { x: 400, y: 400 },
         PathSet: { x: 400, y: 400 },
         Pic: [],
+        PicLarge: "",
         Pos: [],
         PicSize: 18,
         PicHarfSize: 9,
@@ -294,6 +292,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 USER.Target = OBJMOD.Pos.length - 1;
                 OBJMOD.PathSet.x = x;
                 OBJMOD.PathSet.y = y;
+                //이미지 초기화
+                loadBigPic("");
                 console.log(USER.TimeSet, idx);
             }
         }
@@ -604,7 +604,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var timespan = new Date().getTime() - USER.TimeSet.getTime();
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
-            //bigger image Set
+            if (OBJMOD.PicLargekey === "") {
+                OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(20,80);
+                loadBigPic(OBJMOD.PicLargekey);
+            }
         }
         //fetch size & position
         OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 10000);
@@ -627,6 +630,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var outPos = OBJMOD.Pos.pop();
             OBJMOD.PicOut = [outP, outPos.slice(0)];
             USER.Target = -1;
+            loadBigPic("");
         }
     }
     function drawBgPic() {
@@ -634,9 +638,29 @@ var SipuViewer = (function (SipuViewer, undefined) {
             if (a[2] === OBJMOD.PicSize) {
                 Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize * 0.67), a[2], a[2] * 0.67);
             } else {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                //큰이미지일 경우 분기처리를 위해 마지막은 제외
+                if (OBJMOD.Pos.length - 1 === i) {
+                    if (OBJMOD.PicLarge !== "") {
+                        Canvas.ctx.drawImage(OBJMOD.PicLarge, (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                    } else {
+                        Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                    }
+                } else {
+                    Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                }
             }
         });
+    }
+    function loadBigPic(key) {
+        //이미지 초기화
+        if (key === "") {
+            OBJMOD.PicLarge = "";
+            OBJMOD.PicLargekey = "";
+        }
+        //이미지 로드하기
+        /***
+         * key 기준으로 파일 이름을 로드 하는 방식으로
+         */
     }
     function drawBgPicOut() {
         if (OBJMOD.PicOut.length === 0) { return; }
