@@ -180,6 +180,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     USER.SetPos = function () {
         USER.PosRest = [20, -20, 2];
+        USER.OriPos = USER.Pos;
         USER.Mov = [
             [0, 0, 0],
             [0.05, -0.05, 0.02],
@@ -321,37 +322,38 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function fetchUser(dt) {
         if (USER.State === USERSTATE.Rest) {
-            if (USER.MovIdx[0] < USER.PosRest[0]) {
-                USER.MovIdx[0] += dt;
+            if (USER.Pos[0] < USER.PosRest[0]) {
+                USER.Pos[0] += dt;
             }
-            if (USER.MovIdx[1] > USER.PosRest[1]) {
-                USER.MovIdx[1] -= dt;
+            if (USER.Pos[1] > USER.PosRest[1]) {
+                USER.Pos[1] -= dt;
             }
-            if (USER.MovIdx[2] < USER.PosRest[2]) {
-                USER.MovIdx[2] += dt;
+            if (USER.Pos[2] < USER.PosRest[2]) {
+                USER.Pos[2] += dt;
             }
             if (USER.Energy > 50) {
                 var rpos = USER.Mov[USER.MovIdx];
+                var opos = USER.OriPos;
                 var spos = [false, false, false];
-                if (USER.MovIdx[0] > rpos[0]) {
-                    USER.MovIdx[0] -= dt;
+                if (USER.Pos[0] > opos[0] + rpos[0]) {
+                    USER.Pos[0] -= dt;
                 } else {
-                    USER.MovIdx[0] = rpos[0];
+                    USER.Pos[0] = rpos[0] + opos[0];
                     spos[0] = true;
                 }
-                if (USER.MovIdx[1] < rpos[1]) {
+                if (USER.Pos[1] < opos[1] + rpos[1]) {
                     USER.MovIdx[1] += dt;
                 } else {
-                    USER.MovIdx[1] = rpos[1];
+                    USER.MovIdx[1] = rpos[1] + opos[2];
                     spos[1] = true;
                 }
-                if (USER.MovIdx[2] < rpos[2]) {
+                if (USER.MovIdx[2] < opos[2] +  rpos[2]) {
                     USER.MovIdx[2] -= dt;
                 } else {
-                    USER.MovIdx[2] = rpos[2];
+                    USER.MovIdx[2] = rpos[2] + opos[2];
                     spos[2] = true;
                 }
-                if (spos.every(a=>a)) {
+                if (spos.every(a)) {
                     USER.State = USERSTATE.Walk;
                 }
             } else {
