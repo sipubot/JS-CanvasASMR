@@ -322,13 +322,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function fetchUser(dt) {
         if (USER.State === USERSTATE.Rest) {
-            if (USER.Pos[0] < USER.PosRest[0]) {
+            if (USER.Pos[0] < USER.PosRest[0] + USER.OriPos[0]) {
                 USER.Pos[0] += dt;
             }
-            if (USER.Pos[1] > USER.PosRest[1]) {
+            if (USER.Pos[1] > USER.PosRest[1] + USER.OriPos[1]) {
                 USER.Pos[1] -= dt;
             }
-            if (USER.Pos[2] < USER.PosRest[2]) {
+            if (USER.Pos[2] < USER.PosRest[2] + USER.OriPos[2]) {
                 USER.Pos[2] += dt;
             }
             if (USER.Energy > 50) {
@@ -353,7 +353,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                     USER.Pos[2] = rpos[2] + opos[2];
                     spos[2] = true;
                 }
-                if (spos.every(a)) {
+                if (spos.every(a=>a)) {
                     USER.State = USERSTATE.Walk;
                 }
             } else {
