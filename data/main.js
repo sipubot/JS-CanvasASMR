@@ -48,11 +48,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         timefps: 60,
         fps: 30
     };
-    var CAN = {
-        WIDTH: 800,
-        HEIGHT: 600,
-        HORIZONS: 400
-    }
     /***
      * Init Object 
      */
@@ -214,14 +209,19 @@ var SipuViewer = (function (SipuViewer, undefined) {
             [0.05, -0.05, 0.02]
         ];
     }
+    /***
+     * init Canvas
+     */
     var Canvas = {
         obj: document.getElementById(SipuViewer.init.canvasID)
     };
-    /***
-     * Canvas Walking Part
-     */
+    var CAN = {
+        WIDTH: 800,
+        HEIGHT: 600,
+        HORIZONS: 400
+    }
     Canvas.init = function () {
-        //init def
+        //init canvas
         Canvas.ctx = Canvas.obj.getContext("2d");
         Canvas.bound = Canvas.obj.getBoundingClientRect();
         //init event
@@ -290,7 +290,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 USER.Target = OBJMOD.Pos.length - 1;
                 OBJMOD.PathSet.x = x;
                 OBJMOD.PathSet.y = y;
-                //이미지 초기화
                 loadBigPic("");
                 console.log(USER.TimeSet, idx);
             }
@@ -311,7 +310,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
                     USER.Energy = USER.Energy + (OBJITEM.LIFE[key][i] * 0.1) > USER.EnergyMax ?
                         USER.EnergyMax : USER.Energy + (OBJITEM.LIFE[key][i] * 0.1);
                     OBJITEM.LIFEADDPOS = [x - 12, y - 12, 20, 1];
-                    //remove
                     OBJITEM.LIFE[key][i] = 0;
                 }
             });
@@ -347,7 +345,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             }
         }
         if (USER.State === USERSTATE.Walk) {
-            //유저 에너지 감소
             if (USER.Energy === 0) {
                 USER.State = USERSTATE.Rest;
                 return;
@@ -380,7 +377,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             , a[2]
             , a[2]
         );
-        //draw now energy state
         Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
             OBJITEM.POS["LIKE"][0],
             OBJITEM.POS["LIKE"][1],
@@ -393,7 +389,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.fillRect(CAN.WIDTH - 38 - USER.Energy, 14, USER.Energy, 6);
     }
     function fetchButterFly(dt) {
-        //butterfly
         if (0 < OBJITEM.TARGET["BUTTERFLY"].length) {
             var flydisx = getRandomInt(2, 4) * dt * 2;
             var flydisy = getRandomInt(2, 4) * dt * 2;
@@ -405,7 +400,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 && 2 > Math.abs(OBJITEM.TARGET["BUTTERFLY"][0][1] - OBJITEM.POS["BUTTERFLY"][1])) {
                 OBJITEM.TARGET["BUTTERFLY"].shift();
             }
-            //fly 
+            //Wing Effect
             if (OBJITEM.TARGET.BUTTERFLYWING) {
                 OBJITEM.POS["BUTTERFLY"][2] -= dt * OBJITEM.TARGET.BUTTERFLYSPEED;
                 if (OBJITEM.POS["BUTTERFLY"][2] <= 1) { OBJITEM.TARGET.BUTTERFLYWING = false; }
@@ -431,7 +426,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
     }
     function drawButterFly() {
-        //draw butter fly (no motion)
         Canvas.ctx.drawImage(OBJITEM.PIC["BUTTERFLY"],
             OBJITEM.POS["BUTTERFLY"][0] - OBJITEM.POS["BUTTERFLY"][2] * 0.5,
             OBJITEM.POS["BUTTERFLY"][1],
@@ -442,7 +436,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function fetchItem(dt) {
         if (USERSTATE.Walk !== USER.State) { return; }
-        //eat item
         if (0 < OBJITEM.LIFEADDPOS.length) {
             OBJITEM.LIFEADDPOS[3] -= dt * 0.5;
             OBJITEM.LIFEADDPOS[1] -= 0.5;
@@ -501,7 +494,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (Math.round(Math.random()) === 0) {
             return;
         }
-        // 신규 아이템 들어갈때 item path를 산출해서 밀어 넣음
         var il = { "0": "APPLE", "1": "CARROT", "2": "STRAWBERRY" };
         var item = il[getRandomInt(0, 2) + ''];
         var randEndX = getRandomInt(200, 600);
@@ -533,7 +525,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["STRAWBERRY"].map(a => {
             Canvas.ctx.drawImage(OBJITEM.PIC["STRAWBERRY"], a[0], a[1], a[2], a[2]);
         });
-        //eat item
+        //Eat Item event
         if (4 === OBJITEM.LIFEADDPOS.length) {
             Canvas.ctx.globalAlpha = OBJITEM.LIFEADDPOS[3];
             Canvas.ctx.drawImage(OBJITEM.PIC["LIKE"],
@@ -584,7 +576,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function fetchTarget(idx) {
         if (idx === -1 || idx == undefined) { return; }
-        //onUser Not Walking Stop
         if (USER.State !== USERSTATE.Walk) { return; }
         var timespan = new Date().getTime() - USER.TimeSet.getTime();
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
@@ -593,21 +584,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 loadBigPic(OBJMOD.PicLargekey);
             }
         }
-        //fetch size & position
         OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 10000);
         if (OBJMOD.Pos[idx][1] - OBJMOD.Pos[idx][2] < 0) {
             OBJMOD.Pos[idx][1] += 0.7;
         }
-        //fetch other
         OBJMOD.Pos.map((a, i) => {
             if (a[2] > OBJMOD.PicSize && i < OBJMOD.Pos.length - 1) {
                 OBJMOD.Pos[i][2] -= 0.7;
-                if (OBJMOD.Pos[i][2] < OBJMOD.PicSize) {
-                    OBJMOD.Pos[i][2] = OBJMOD.PicSize;
-                }
+                if (OBJMOD.Pos[i][2] < OBJMOD.PicSize) { OBJMOD.Pos[i][2] = OBJMOD.PicSize; }
             }
         });
-        //remover
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize) {
             var outP = OBJMOD.Pic.pop();
             var outPos = OBJMOD.Pos.pop();
@@ -622,7 +608,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 Canvas.ctx.drawImage(OBJMOD.Pic[i]
                     , (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize * 0.67), a[2], a[2] * 0.67);
             } else {
-                //큰이미지일 경우 분기처리를 위해 마지막은 제외
                 if (OBJMOD.Pos.length - 1 === i) {
                     if (OBJMOD.PicLarge !== "") {
                         Canvas.ctx.drawImage(OBJMOD.PicLarge
@@ -639,12 +624,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
     }
     function loadBigPic(key) {
-        //이미지 초기화
         if (key === "") {
             OBJMOD.PicLarge = "";
             OBJMOD.PicLargekey = "";
         }
-        //이미지 로드하기
         /***
          * key 기준으로 파일 이름을 로드 하는 방식으로
          */
@@ -667,7 +650,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var goal = OBJMOD.PathSet.x || 0;
         var gap = Math.abs(onside - goal);
         if (gap > 1) {
-            //on Turn
             if (USER.State !== USERSTATE.Turn) { USER.State = USERSTATE.Turn; }
             if (oneStep < gap) {
                 OBJMOD.Path.x = onside > goal ? onside - oneStep : onside + oneStep;
@@ -675,7 +657,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 OBJMOD.Path.x = onside > goal ? onside - gap : onside + gap;
             }
         } else {
-            //turn complete
             if (USER.State !== USERSTATE.Walk) { USER.State = USERSTATE.Walk; }
         }
     }
@@ -722,24 +703,15 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 OBJBG.POS["CLOUD"][i][0] -= oneStep;
             });
         }
-        /***
-         * 좌우 화면 연결
-         */
         OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > CAN.WIDTH
             ? OBJBG.POS["MOUNTAIN2"][0] % CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
         OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0
             ? OBJBG.POS["MOUNTAIN2"][0] + CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
-        /***
-         * 추가적인 움직임 설정
-         */
         OBJBG.POS["CLOUD"].map((a, i) => {
-            //크기에 비례하게 속도 조정
             OBJBG.POS["CLOUD"][i][0] -= oneStep * 0.02 * OBJBG.POS["CLOUD"][i][2];
         });
-        //사라진 구름 다시 추가
         OBJBG.POS["CLOUD"] = OBJBG.POS["CLOUD"].filter(a => a[0] + a[2] > 0);
         if (OBJBG.POS["CLOUD"].length < OBJBG.CPT["CLOUD"]) {
-            var add = OBJBG.POS["CLOUD"].length - OBJBG.CPT["CLOUD"];
             OBJBG.POS["CLOUD"].push([CAN.WIDTH, getRandomInt(20, 150), getRandomInt(30, 50)]);
         }
     }
@@ -752,6 +724,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var mp = OBJBG.POS["MOUNTAIN2"];
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - CAN.WIDTH, mp[1] + 129, CAN.WIDTH, 300);
         Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, CAN.WIDTH, 300);
+        //돌 부딫힘 이벤트 고려 하기
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
     }
