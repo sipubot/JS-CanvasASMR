@@ -179,8 +179,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Energy: 100
     };
     USER.SetPos = function () {
-        USER.RestPostYOri = [20, -20, 2];
-        USER.RestPosY = [0, 0, 0];
+        USER.RestPostYOri = [20, -12, 2];
+        USER.PosYAdd = [0, 0, 0];
         USER.Mov = [
             [0, 0, 0],
             [0.05, -0.05, 0.02],
@@ -319,31 +319,31 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function fetchUser(dt) {
         if (USER.State === USERSTATE.Rest) {
-            if (USER.RestPosY[0] < USER.RestPostYOri[0]) {
-                USER.RestPosY[0] += dt;
-            } else {
-                USER.RestPosY[0] = USER.RestPostYOri[0];
-            }
-            if (USER.RestPosY[1] > USER.RestPostYOri[1]) {
-                USER.RestPosY[1] -= dt;
-            } else {
-                USER.RestPosY[1] = USER.RestPostYOri[1];
-            }
-            if (USER.RestPosY[2] > USER.RestPostYOri[2]) {
-                USER.RestPosY[2] -= dt;
-            } else {
-                USER.RestPosY[2] = USER.RestPostYOri[2];
-            }
             if (USER.Energy > USER.EnergyMax * 0.5) {
-                USER.RestPosY[0] = USER.RestPosY[0] > 0 ? USER.RestPosY[0] - dt : 0;
-                USER.RestPosY[1] = USER.RestPosY[1] < 0 ? USER.RestPosY[1] + dt : 0;
-                USER.RestPosY[2] = USER.RestPosY[2] > 0 ? USER.RestPosY[2] - dt : 0;
-                if (USER.RestPosY.every(a => a === 0)) {
+                USER.PosYAdd[0] = USER.PosYAdd[0] > 0 ? USER.PosYAdd[0] - dt : 0;
+                USER.PosYAdd[1] = USER.PosYAdd[1] < 0 ? USER.PosYAdd[1] + dt : 0;
+                USER.PosYAdd[2] = USER.PosYAdd[2] > 0 ? USER.PosYAdd[2] - dt : 0;
+                if (USER.PosYAdd.every(a => a === 0)) {
                     USER.State = USERSTATE.Walk;
                     console.log(USER.Pos, "Go again");
                 }
             } else {
-                USER.Energy += dt;
+                if (USER.PosYAdd[0] < USER.RestPostYOri[0]) {
+                    USER.PosYAdd[0] += dt;
+                } else {
+                    USER.PosYAdd[0] = USER.RestPostYOri[0];
+                }
+                if (USER.PosYAdd[1] > USER.RestPostYOri[1]) {
+                    USER.PosYAdd[1] -= dt;
+                } else {
+                    USER.PosYAdd[1] = USER.RestPostYOri[1];
+                }
+                if (USER.PosYAdd[2] > USER.RestPostYOri[2]) {
+                    USER.PosYAdd[2] -= dt;
+                } else {
+                    USER.PosYAdd[2] = USER.RestPostYOri[2];
+                }
+                USER.Energy += dt * 0.5;
             }
         }
         if (USER.State === USERSTATE.Walk) {
@@ -357,10 +357,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             USER.MovIdx = (USER.MovIdx + 1) % USER.Mov.length;
         }
         if (USER.State === USERSTATE.Turn) {
-            if (USER.Energy === 0) {
-                USER.State = USERSTATE.Rest;
-                return;
-            }
         }
     }
     function drawUser() {
@@ -368,19 +364,19 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var i = USER.MovIdx;
         Canvas.ctx.drawImage(USER.PIC["HEAD"]
             , a[0] + 12
-            , a[1] - 10 + USER.Mov[i][0] + USER.RestPosY[0]
+            , a[1] - 10 + USER.Mov[i][0] + USER.PosYAdd[0]
             , a[2] - 12
             , a[2] - 12
         );
         Canvas.ctx.drawImage(USER.PIC["TAIL"]
             , a[0] + 14
-            , a[1] + 20 + USER.Mov[i][1] + USER.RestPosY[1]
+            , a[1] + 20 + USER.Mov[i][1] + USER.PosYAdd[1]
             , a[2] - 16
             , a[2] - 16
         );
         Canvas.ctx.drawImage(USER.PIC["BODY"]
             , a[0]
-            , a[1] + USER.Mov[i][2] + USER.RestPosY[2]
+            , a[1] + USER.Mov[i][2] + USER.PosYAdd[2]
             , a[2]
             , a[2]
         );
