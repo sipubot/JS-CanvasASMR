@@ -179,8 +179,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Energy: 100
     };
     USER.SetPos = function () {
-        USER.PosRest = [20, -20, 2];
-        USER.OriPos = USER.Pos;
+        USER.RestPostYOri = [20, -20, 2];
+        USER.RestPosY = [0, 0, 0];
         USER.Mov = [
             [0, 0, 0],
             [0.05, -0.05, 0.02],
@@ -322,38 +322,26 @@ var SipuViewer = (function (SipuViewer, undefined) {
     }
     function fetchUser(dt) {
         if (USER.State === USERSTATE.Rest) {
-            if (USER.Pos[0] < USER.PosRest[0] + USER.OriPos[0]) {
-                USER.Pos[0] += dt;
+            if (USER.RestPosY[0] < USER.RestPostYOri[0]) {
+                USER.RestPosY[0] += dt;
+            } else {
+                USER.RestPosY[0] = USER.RestPostYOri[0];
             }
-            if (USER.Pos[1] > USER.PosRest[1] + USER.OriPos[1]) {
-                USER.Pos[1] -= dt;
+            if (USER.RestPosY[1] > USER.RestPostYOri[1]) {
+                USER.RestPosY[1] -= dt;
+            } else {
+                USER.RestPosY[1] = USER.RestPostYOri[1];
             }
-            if (USER.Pos[2] < USER.PosRest[2] + USER.OriPos[2]) {
-                USER.Pos[2] += dt;
+            if (USER.RestPosY[2] > USER.RestPostYOri[2]) {
+                USER.RestPosY[2] -= dt;
+            } else {
+                USER.RestPosY[2] = USER.RestPostYOri[2];
             }
             if (USER.Energy > 50) {
-                var rpos = USER.Mov[USER.MovIdx];
-                var opos = USER.OriPos;
-                var spos = [false, false, false];
-                if (USER.Pos[0] > opos[0] + rpos[0]) {
-                    USER.Pos[0] -= dt;
-                } else {
-                    USER.Pos[0] = rpos[0] + opos[0];
-                    spos[0] = true;
-                }
-                if (USER.Pos[1] < opos[1] + rpos[1]) {
-                    USER.Pos[1] += dt;
-                } else {
-                    USER.Pos[1] = rpos[1] + opos[2];
-                    spos[1] = true;
-                }
-                if (USER.Pos[2] < opos[2] +  rpos[2]) {
-                    USER.Pos[2] -= dt;
-                } else {
-                    USER.Pos[2] = rpos[2] + opos[2];
-                    spos[2] = true;
-                }
-                if (spos.every(a=>a)) {
+                USER.RestPosY[0] = USER.RestPosY[0] > 0 ? USER.RestPosY[0] - dt : 0;
+                USER.RestPosY[1] = USER.RestPosY[1] < 0 ? USER.RestPosY[1] + dt : 0;
+                USER.RestPosY[2] = USER.RestPosY[2] > 0 ? USER.RestPosY[2] - dt : 0;
+                if (USER.RestPosY.every(a => a === 0)) {
                     USER.State = USERSTATE.Walk;
                 }
             } else {
@@ -382,19 +370,19 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var i = USER.MovIdx;
         Canvas.ctx.drawImage(USER.PIC["HEAD"]
             , a[0] + 12
-            , a[1] - 10 + USER.Mov[i][0]
+            , a[1] - 10 + USER.Mov[i][0] + USER.RestPosY[0]
             , a[2] - 12
             , a[2] - 12
         );
         Canvas.ctx.drawImage(USER.PIC["TAIL"]
             , a[0] + 14
-            , a[1] + 20 + USER.Mov[i][1]
+            , a[1] + 20 + USER.Mov[i][1] + USER.RestPosY[0]
             , a[2] - 16
             , a[2] - 16
         );
         Canvas.ctx.drawImage(USER.PIC["BODY"]
             , a[0]
-            , a[1] + USER.Mov[i][2]
+            , a[1] + USER.Mov[i][2] + USER.RestPosY[0]
             , a[2]
             , a[2]
         );
@@ -607,7 +595,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var timespan = new Date().getTime() - USER.TimeSet.getTime();
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
             if (OBJMOD.PicLargekey === "") {
-                OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(20,80);
+                OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(20, 80);
                 loadBigPic(OBJMOD.PicLargekey);
             }
         }
