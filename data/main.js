@@ -55,6 +55,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         timefps: 60,
         fps: 30
     };
+    var CAN = {
+        WIDTH: 800,
+        HEIGHT: 600,
+        HORIZONS: 400
+    }
     /***
      * Init Object 
      */
@@ -108,8 +113,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
             P2TX: 350,
             P2TY: 450
         },
-        Path: { x: 400, y: 400 },
-        PathSet: { x: 400, y: 400 },
+        Path: { x: CAN.WIDTH * 0.5, y: CAN.HORIZONS },
+        PathSet: { x: CAN.WIDTH * 0.5, y: CAN.HORIZONS },
         Pic: [],
         PicLarge: "",
         Pos: [],
@@ -121,7 +126,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     OBJMOD.SetBgPic = function () {
         var len = OBJMOD.Pic.length;
         OBJMOD.Pos = Array.apply(null, Array(len))
-            .map(a => [getRandomInt(0, 800), getRandomInt(300, 380), OBJMOD.PicSize]);
+            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(300, 380), OBJMOD.PicSize]);
     };
     var OBJBG = {
         OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
@@ -131,7 +136,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         POS: {}
     };
     OBJBG.SetBgObjPos = function () {
-        OBJBG.POS["MOUNTAIN2"] = [400, 0];
+        OBJBG.POS["MOUNTAIN2"] = [CAN.WIDTH * 0.5, 0];
         OBJBG.CPT["CLOUD"] = 10;
         OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
             .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
@@ -159,10 +164,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJITEM.POS["APPLE"] = [];
         OBJITEM.POS["CARROT"] = [];
         OBJITEM.POS["STRAWBERRY"] = [];
-        OBJITEM.POS["LIKE"] = [770, 10, 16];
-        OBJITEM.POS["BUTTERFLY"] = [400, 300, 20, 20];
+        OBJITEM.POS["LIKE"] = [CAN.WIDTH - 30, 10, 16];
+        OBJITEM.POS["BUTTERFLY"] = [CAN.WIDTH * 0.5, CAN.HORIZONS * 0.5, 20, 20];
         OBJITEM.TARGET["BUTTERFLY"] = [];
         OBJITEM.TARGET.BUTTERFLYWING = true;
+        OBJITEM.TARGET.BUTTERFLYSPEED = 30;
     };
     var USERSTATE = {
         Walk: 1,
@@ -176,6 +182,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Target: -1,
         TimeSet: new Date(),
         State: USERSTATE.Walk,
+        EnergyMax: 100,
         Energy: 100
     };
     USER.SetPos = function () {
@@ -311,8 +318,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 ) {
                     if (USER.State !== USERSTATE.Walk) { return; }
                     console.log(OBJITEM.POS[key], x, y);
-                    USER.Energy = USER.Energy + (OBJITEM.LIFE[key][i] * 0.1) > 100 ?
-                        100 : USER.Energy + (OBJITEM.LIFE[key][i] * 0.1);
+                    USER.Energy = USER.Energy + (OBJITEM.LIFE[key][i] * 0.1) > USER.EnergyMax ?
+                        USER.EnergyMax : USER.Energy + (OBJITEM.LIFE[key][i] * 0.1);
                     OBJITEM.LIFEADDPOS = [x - 12, y - 12, 20, 1];
                     //remove
                     OBJITEM.LIFE[key][i] = 0;
@@ -337,12 +344,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
             } else {
                 USER.RestPosY[2] = USER.RestPostYOri[2];
             }
-            if (USER.Energy > 50) {
+            if (USER.Energy > USER.EnergyMax * 0.5) {
                 USER.RestPosY[0] = USER.RestPosY[0] > 0 ? USER.RestPosY[0] - dt : 0;
                 USER.RestPosY[1] = USER.RestPosY[1] < 0 ? USER.RestPosY[1] + dt : 0;
                 USER.RestPosY[2] = USER.RestPosY[2] > 0 ? USER.RestPosY[2] - dt : 0;
                 if (USER.RestPosY.every(a => a === 0)) {
                     USER.State = USERSTATE.Walk;
+                    console.log(USER.Pos, "Go again");
                 }
             } else {
                 USER.Energy += dt;
@@ -356,7 +364,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             }
             USER.Energy -= dt * 0.1;
             USER.Energy = USER.Energy < 0 ? 0 : USER.Energy;
-            USER.MovIdx = (USER.MovIdx + 1) % 30;
+            USER.MovIdx = (USER.MovIdx + 1) % USER.Mov.length;
         }
         if (USER.State === USERSTATE.Turn) {
             if (USER.Energy === 0) {
@@ -376,13 +384,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
         );
         Canvas.ctx.drawImage(USER.PIC["TAIL"]
             , a[0] + 14
-            , a[1] + 20 + USER.Mov[i][1] + USER.RestPosY[0]
+            , a[1] + 20 + USER.Mov[i][1] + USER.RestPosY[1]
             , a[2] - 16
             , a[2] - 16
         );
         Canvas.ctx.drawImage(USER.PIC["BODY"]
             , a[0]
-            , a[1] + USER.Mov[i][2] + USER.RestPosY[0]
+            , a[1] + USER.Mov[i][2] + USER.RestPosY[2]
             , a[2]
             , a[2]
         );
@@ -394,9 +402,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJITEM.POS["LIKE"][2]
         );
         Canvas.ctx.fillStyle = '#FD0';
-        Canvas.ctx.fillRect(660, 13, 104, 10);
+        Canvas.ctx.fillRect(CAN.WIDTH - 140, 13, 104, 10);
         Canvas.ctx.fillStyle = '#e44';
-        Canvas.ctx.fillRect(762 - USER.Energy, 14, USER.Energy, 6);
+        Canvas.ctx.fillRect(CAN.WIDTH - 38 - USER.Energy, 14, USER.Energy, 6);
     }
     function fetchButterFly(dt) {
         //butterfly
@@ -413,16 +421,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
             }
             //fly 
             if (OBJITEM.TARGET.BUTTERFLYWING) {
-                OBJITEM.POS["BUTTERFLY"][2] -= dt * 30;
+                OBJITEM.POS["BUTTERFLY"][2] -= dt * OBJITEM.TARGET.BUTTERFLYSPEED;
                 if (OBJITEM.POS["BUTTERFLY"][2] <= 1) { OBJITEM.TARGET.BUTTERFLYWING = false; }
             } else {
-                OBJITEM.POS["BUTTERFLY"][2] += dt * 30;
+                OBJITEM.POS["BUTTERFLY"][2] += dt * OBJITEM.TARGET.BUTTERFLYSPEED;
                 if (OBJITEM.POS["BUTTERFLY"][2] >= 20) { OBJITEM.TARGET.BUTTERFLYWING = true; }
             }
         }
         if (1 === getRandomInt(0, 50) && OBJITEM.TARGET["BUTTERFLY"].length === 0) {
-            var x = getRandomInt(100, 700);
-            var y = getRandomInt(80, 520);
+            var x = getRandomInt(100, CAN.WIDTH - 100);
+            var y = getRandomInt(80, CAN.HEIGHT - 80);
             var lx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ?
                 OBJITEM.POS["BUTTERFLY"][0] : x;
             var rx = x - OBJITEM.POS["BUTTERFLY"][0] > 0 ?
@@ -432,7 +440,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             var by = y - OBJITEM.POS["BUTTERFLY"][1] > 0 ?
                 y : OBJITEM.POS["BUTTERFLY"][1];
             var add = Array.apply(null, Array(5))
-                .map(a => [getRandomInt(lx, rx), getRandomInt(ty, by), 18]);
+                .map(a => [getRandomInt(lx, rx), getRandomInt(ty, by)]);
             OBJITEM.TARGET["BUTTERFLY"] = add;
         }
     }
@@ -515,13 +523,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
             getBezierXY(
                 0.2 + (0.04 * i),
                 OBJMOD.Path.x,
-                400,
+                CAN.WIDTH,
                 OBJMOD.PATHPOINT.P1TX,
                 OBJMOD.PATHPOINT.P1TY,
                 OBJMOD.PATHPOINT.P1BX,
                 OBJMOD.PATHPOINT.P1BY,
                 randEndX,
-                600
+                CAN.HEIGHT
             )
         );
         OBJITEM.PATH[item].push(path);
@@ -554,22 +562,22 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function fetchBgPicPath(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
-        if (399 > OBJMOD.Path.x) {
+        if ((CAN.WIDTH * 0.5) - 1 > OBJMOD.Path.x) {
             OBJMOD.Pos = OBJMOD.Pos.map(a => {
                 a[0] += oneStep;
-                if (a[0] > 800) {
-                    a[0] -= 800;
+                if (a[0] > CAN.WIDTH) {
+                    a[0] -= CAN.WIDTH;
                 }
                 return a;
             });
             OBJMOD.Path.x += oneStep;
             OBJMOD.PathSet.x += oneStep;
         }
-        if (400 < OBJMOD.Path.x) {
+        if (CAN.WIDTH * 0.5 < OBJMOD.Path.x) {
             OBJMOD.Pos.map(a => {
                 a[0] -= oneStep;
                 if (a[0] < 0) {
-                    a[0] += 800;
+                    a[0] += CAN.WIDTH;
                 }
             });
             OBJMOD.Path.x -= oneStep;
@@ -577,16 +585,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
     }
     function drawBg() {
-        var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, 400);
+        var grdSky = Canvas.ctx.createLinearGradient(0, 0, 0, CAN.HORIZONS);
         grdSky.addColorStop(0, COLOR.SKY.TOP);
         grdSky.addColorStop(1, COLOR.SKY.BOTTOM);
         Canvas.ctx.fillStyle = grdSky;
-        Canvas.ctx.fillRect(0, 0, 800, 400);
-        var grdLand = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
+        Canvas.ctx.fillRect(0, 0, CAN.WIDTH, CAN.HORIZONS);
+        var grdLand = Canvas.ctx.createLinearGradient(0, CAN.HORIZONS, 0, CAN.HEIGHT);
         grdLand.addColorStop(0, COLOR.LAND.TOP);
         grdLand.addColorStop(1, COLOR.LAND.BOTTOM);
         Canvas.ctx.fillStyle = grdLand;
-        Canvas.ctx.fillRect(0, 400, 800, 600);
+        Canvas.ctx.fillRect(0, CAN.HORIZONS, CAN.WIDTH, CAN.HEIGHT);
     }
     function fetchTarget(idx) {
         if (idx === -1 || idx == undefined) { return; }
@@ -683,15 +691,15 @@ var SipuViewer = (function (SipuViewer, undefined) {
         }
     }
     function drawPath() {
-        var grd = Canvas.ctx.createLinearGradient(0, 400, 0, 600);
+        var grd = Canvas.ctx.createLinearGradient(0, CAN.HORIZONS, 0, CAN.HEIGHT);
         grd.addColorStop(0, COLOR.PATH.TOP);
         grd.addColorStop(1, COLOR.PATH.BOTTOM);
         Canvas.ctx.beginPath();
         Canvas.ctx.strokeStyle = COLOR.PATH.BOTTOM;
-        Canvas.ctx.moveTo(OBJMOD.Path.x, 400);
-        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P1TX, OBJMOD.PATHPOINT.P1TY, OBJMOD.PATHPOINT.P1BX, OBJMOD.PATHPOINT.P1BY, 200, 600);
-        Canvas.ctx.lineTo(600, 600);
-        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P2BX, OBJMOD.PATHPOINT.P2BY, OBJMOD.PATHPOINT.P2TX, OBJMOD.PATHPOINT.P2TY, OBJMOD.Path.x, 400);
+        Canvas.ctx.moveTo(OBJMOD.Path.x, CAN.HORIZONS);
+        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P1TX, OBJMOD.PATHPOINT.P1TY, OBJMOD.PATHPOINT.P1BX, OBJMOD.PATHPOINT.P1BY, CAN.WIDTH - 200, CAN.HEIGHT);
+        Canvas.ctx.lineTo(CAN.WIDTH + 200, CAN.HEIGHT);
+        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P2BX, OBJMOD.PATHPOINT.P2BY, OBJMOD.PATHPOINT.P2TX, OBJMOD.PATHPOINT.P2TY, OBJMOD.Path.x, CAN.HORIZONS);
         Canvas.ctx.closePath();
         Canvas.ctx.fillStyle = grd;
         Canvas.ctx.fill();
@@ -699,13 +707,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function fetchBgObj(dt) {
         if (USER.State !== USERSTATE.Walk) { return; }
         var oneStep = dt * 1;
-        if (399 > OBJMOD.Path.x) {
+        if ((CAN.WIDTH * 0.5) - 1 > OBJMOD.Path.x) {
             OBJBG.POS["MOUNTAIN2"][0] += oneStep;
             OBJBG.POS["CLOUD"].map((a, i) => {
                 OBJBG.POS["CLOUD"][i][0] += oneStep;
             });
         }
-        if (400 < OBJMOD.Path.x) {
+        if (CAN.WIDTH * 0.5 < OBJMOD.Path.x) {
             OBJBG.POS["MOUNTAIN2"][0] -= oneStep;
             OBJBG.POS["CLOUD"].map((a, i) => {
                 OBJBG.POS["CLOUD"][i][0] -= oneStep;
@@ -714,8 +722,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         /***
          * 좌우 화면 연결
          */
-        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > 800 ? OBJBG.POS["MOUNTAIN2"][0] % 800 : OBJBG.POS["MOUNTAIN2"][0];
-        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0 ? OBJBG.POS["MOUNTAIN2"][0] + 800 : OBJBG.POS["MOUNTAIN2"][0];
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > CAN.WIDTH ? OBJBG.POS["MOUNTAIN2"][0] % CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0 ? OBJBG.POS["MOUNTAIN2"][0] + CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
         /***
          * 추가적인 움직임 설정
          */
@@ -727,7 +735,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         OBJBG.POS["CLOUD"] = OBJBG.POS["CLOUD"].filter(a => a[0] + a[2] > 0);
         if (OBJBG.POS["CLOUD"].length < OBJBG.CPT["CLOUD"]) {
             var add = OBJBG.POS["CLOUD"].length - OBJBG.CPT["CLOUD"];
-            OBJBG.POS["CLOUD"].push([800, getRandomInt(20, 150), getRandomInt(30, 50)]);
+            OBJBG.POS["CLOUD"].push([CAN.WIDTH, getRandomInt(20, 150), getRandomInt(30, 50)]);
         }
     }
     function drawBgObj() {
@@ -737,8 +745,8 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
         Canvas.ctx.globalAlpha = 1;
         var mp = OBJBG.POS["MOUNTAIN2"];
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - 800, mp[1] + 129, 800, 300);
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, 800, 300);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - CAN.WIDTH, mp[1] + 129, CAN.WIDTH, 300);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, CAN.WIDTH, 300);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
     }
@@ -774,7 +782,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         //console.log()
         Canvas.ctx.globalAlpha = COLOR.NOWAIR[3];
         Canvas.ctx.fillStyle = rgbToHex(COLOR.NOWAIR.slice(0, 3));
-        Canvas.ctx.fillRect(0, 0, 800, 600);
+        Canvas.ctx.fillRect(0, 0, CAN.WIDTH, CAN.HEIGHT);
         Canvas.ctx.globalAlpha = 1;
     }
     function LoadData(f) {
