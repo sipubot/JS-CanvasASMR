@@ -39,13 +39,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             Math.pow(1 - t, 3) * sy + 3 * t * Math.pow(1 - t, 2) * cp1y + 3 * t * t * (1 - t) * cp2y + t * t * t * ey
         ];
     }
-    function shuffle(a) {
-        for (let i = a.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [a[i], a[j]] = [a[j], a[i]];
-        }
-        return a;
-    }
     /***
      * Init Enviroment
      */
@@ -235,8 +228,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var rc = clickEvent;
         Canvas.obj.addEventListener("click", rc, false);
     };
-    Canvas.update = function () {
-        var dt = arguments[0];
+    Canvas.update = function (dt) {
         fetchTime(dt);
         fetchBgPicPath(dt);
         fetchPath(dt);
@@ -247,8 +239,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         fetchUser(dt);
     };
     Canvas.draw = function () {
-        //need draw center
-        var dt = arguments[0];
         drawBg();
         drawPath();
         drawBgObj();
@@ -266,7 +256,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function CanvasLoop(drawobj) {
         var dt = 1 / SipuViewer.init.fps;
         Canvas.update(dt);
-        Canvas.draw(dt, drawobj.ctx);
+        Canvas.draw();
     }
     function clickEvent(e) {
         var clk_X = e.clientX - Canvas.bound.left;
@@ -623,7 +613,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
         //remover
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize) {
-            userChangeTarget(-1, OBJMOD.PathSet.x, OBJMOD.PathSet.y);
             var outP = OBJMOD.Pic.pop();
             var outPos = OBJMOD.Pos.pop();
             OBJMOD.PicOut = [outP, outPos.slice(0)];
@@ -634,17 +623,21 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function drawBgPic() {
         OBJMOD.Pos.map((a, i) => {
             if (a[2] === OBJMOD.PicSize) {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize * 0.67), a[2], a[2] * 0.67);
+                Canvas.ctx.drawImage(OBJMOD.Pic[i]
+                    , (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize * 0.67), a[2], a[2] * 0.67);
             } else {
                 //큰이미지일 경우 분기처리를 위해 마지막은 제외
                 if (OBJMOD.Pos.length - 1 === i) {
                     if (OBJMOD.PicLarge !== "") {
-                        Canvas.ctx.drawImage(OBJMOD.PicLarge, (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                        Canvas.ctx.drawImage(OBJMOD.PicLarge
+                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
                     } else {
-                        Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                        Canvas.ctx.drawImage(OBJMOD.Pic[i]
+                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
                     }
                 } else {
-                    Canvas.ctx.drawImage(OBJMOD.Pic[i], (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                    Canvas.ctx.drawImage(OBJMOD.Pic[i]
+                        , (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
                 }
             }
         });
@@ -697,9 +690,23 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Canvas.ctx.beginPath();
         Canvas.ctx.strokeStyle = COLOR.PATH.BOTTOM;
         Canvas.ctx.moveTo(OBJMOD.Path.x, CAN.HORIZONS);
-        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P1TX, OBJMOD.PATHPOINT.P1TY, OBJMOD.PATHPOINT.P1BX, OBJMOD.PATHPOINT.P1BY, CAN.WIDTH - 200, CAN.HEIGHT);
+        Canvas.ctx.bezierCurveTo(
+            OBJMOD.PATHPOINT.P1TX,
+            OBJMOD.PATHPOINT.P1TY,
+            OBJMOD.PATHPOINT.P1BX,
+            OBJMOD.PATHPOINT.P1BY,
+            CAN.WIDTH - 200,
+            CAN.HEIGHT
+        );
         Canvas.ctx.lineTo(CAN.WIDTH + 200, CAN.HEIGHT);
-        Canvas.ctx.bezierCurveTo(OBJMOD.PATHPOINT.P2BX, OBJMOD.PATHPOINT.P2BY, OBJMOD.PATHPOINT.P2TX, OBJMOD.PATHPOINT.P2TY, OBJMOD.Path.x, CAN.HORIZONS);
+        Canvas.ctx.bezierCurveTo(
+            OBJMOD.PATHPOINT.P2BX,
+            OBJMOD.PATHPOINT.P2BY,
+            OBJMOD.PATHPOINT.P2TX,
+            OBJMOD.PATHPOINT.P2TY,
+            OBJMOD.Path.x,
+            CAN.HORIZONS
+        );
         Canvas.ctx.closePath();
         Canvas.ctx.fillStyle = grd;
         Canvas.ctx.fill();
@@ -722,8 +729,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         /***
          * 좌우 화면 연결
          */
-        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > CAN.WIDTH ? OBJBG.POS["MOUNTAIN2"][0] % CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
-        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0 ? OBJBG.POS["MOUNTAIN2"][0] + CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] > CAN.WIDTH
+            ? OBJBG.POS["MOUNTAIN2"][0] % CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
+        OBJBG.POS["MOUNTAIN2"][0] = OBJBG.POS["MOUNTAIN2"][0] < 0
+            ? OBJBG.POS["MOUNTAIN2"][0] + CAN.WIDTH : OBJBG.POS["MOUNTAIN2"][0];
         /***
          * 추가적인 움직임 설정
          */
