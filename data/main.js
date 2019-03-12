@@ -342,15 +342,15 @@ var SipuViewer = (function (SipuViewer, undefined) {
                     spos[0] = true;
                 }
                 if (USER.Pos[1] < opos[1] + rpos[1]) {
-                    USER.MovIdx[1] += dt;
+                    USER.Pos[1] += dt;
                 } else {
-                    USER.MovIdx[1] = rpos[1] + opos[2];
+                    USER.Pos[1] = rpos[1] + opos[2];
                     spos[1] = true;
                 }
-                if (USER.MovIdx[2] < opos[2] +  rpos[2]) {
-                    USER.MovIdx[2] -= dt;
+                if (USER.Pos[2] < opos[2] +  rpos[2]) {
+                    USER.Pos[2] -= dt;
                 } else {
-                    USER.MovIdx[2] = rpos[2] + opos[2];
+                    USER.Pos[2] = rpos[2] + opos[2];
                     spos[2] = true;
                 }
                 if (spos.every(a)) {
