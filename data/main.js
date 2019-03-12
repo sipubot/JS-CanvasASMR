@@ -695,10 +695,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.PATHPOINT.P1TY,
             OBJMOD.PATHPOINT.P1BX,
             OBJMOD.PATHPOINT.P1BY,
-            CAN.WIDTH - 200,
+            (CAN.WIDTH * 0.5) - 200,
             CAN.HEIGHT
         );
-        Canvas.ctx.lineTo(CAN.WIDTH + 200, CAN.HEIGHT);
+        Canvas.ctx.lineTo((CAN.WIDTH * 0.5) + 200, CAN.HEIGHT);
         Canvas.ctx.bezierCurveTo(
             OBJMOD.PATHPOINT.P2BX,
             OBJMOD.PATHPOINT.P2BY,
