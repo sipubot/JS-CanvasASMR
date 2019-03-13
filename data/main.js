@@ -49,6 +49,47 @@ var SipuViewer = (function (SipuViewer, undefined) {
         fps: 30
     };
     /***
+     * init Canvas
+     */
+    var Canvas = {
+        obj: document.getElementById(SipuViewer.init.canvasID)
+    };
+    var CAN = {
+        WIDTH: 800,
+        HEIGHT: 600,
+        HORIZONS: 400
+    }
+    Canvas.init = function () {
+        //init canvas
+        Canvas.ctx = Canvas.obj.getContext("2d");
+        Canvas.bound = Canvas.obj.getBoundingClientRect();
+        //init event
+        var rc = clickEvent;
+        Canvas.obj.addEventListener("click", rc, false);
+    };
+    Canvas.update = function (dt) {
+        fetchTime(dt);
+        fetchBgPicPath(dt);
+        fetchPath(dt);
+        fetchBgObj(dt);
+        fetchTarget(USER.Target);
+        fetchItem(dt);
+        fetchButterFly(dt);
+        fetchUser(dt);
+    };
+    Canvas.draw = function () {
+        drawBg();
+        drawPath();
+        drawBgObj();
+        drawAllTimeColor();
+        drawBgfrontObj();
+        drawBgPic();
+        drawBgPicOut();
+        drawItem();
+        drawButterFly();
+        drawUser();
+    };
+    /***
      * Init Object 
      */
     var BGSTATE = {
@@ -209,47 +250,6 @@ var SipuViewer = (function (SipuViewer, undefined) {
             [0.05, -0.05, 0.02]
         ];
     }
-    /***
-     * init Canvas
-     */
-    var Canvas = {
-        obj: document.getElementById(SipuViewer.init.canvasID)
-    };
-    var CAN = {
-        WIDTH: 800,
-        HEIGHT: 600,
-        HORIZONS: 400
-    }
-    Canvas.init = function () {
-        //init canvas
-        Canvas.ctx = Canvas.obj.getContext("2d");
-        Canvas.bound = Canvas.obj.getBoundingClientRect();
-        //init event
-        var rc = clickEvent;
-        Canvas.obj.addEventListener("click", rc, false);
-    };
-    Canvas.update = function (dt) {
-        fetchTime(dt);
-        fetchBgPicPath(dt);
-        fetchPath(dt);
-        fetchBgObj(dt);
-        fetchTarget(USER.Target);
-        fetchItem(dt);
-        fetchButterFly(dt);
-        fetchUser(dt);
-    };
-    Canvas.draw = function () {
-        drawBg();
-        drawPath();
-        drawBgObj();
-        drawAllTimeColor();
-        drawBgfrontObj();
-        drawBgPic();
-        drawBgPicOut();
-        drawItem();
-        drawButterFly();
-        drawUser();
-    };
     /***
      *  Sub Function obj draw & obj fetch 
      */
