@@ -212,7 +212,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         TimeSet: new Date(),
         State: USERSTATE.Walk,
         EnergyMax: 100,
-        Energy: 100
+        Energy: 1
     };
     USER.SetPos = function () {
         USER.RestPostYOri = [20, -12, 2];
@@ -580,6 +580,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         var timespan = new Date().getTime() - USER.TimeSet.getTime();
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
             if (OBJMOD.PicLargekey === "") {
+                //loadkey
                 OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(20, 80);
                 loadBigPic(OBJMOD.PicLargekey);
             }
@@ -627,10 +628,11 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (key === "") {
             OBJMOD.PicLarge = "";
             OBJMOD.PicLargekey = "";
+        } else {
+            loadJSON("data/" + key + ".json", function (data) {
+                OBJMOD.PicLarge = "data:image/png;base64," + data.PIC;
+            });
         }
-        /***
-         * key 기준으로 파일 이름을 로드 하는 방식으로
-         */
     }
     function drawBgPicOut() {
         if (OBJMOD.PicOut.length === 0) { return; }
