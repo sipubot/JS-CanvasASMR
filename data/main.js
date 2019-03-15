@@ -149,7 +149,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Pos: [],
         PicSize: 18,
         PicHarfSize: 9,
-        PicChangeSize: 600,
+        PicChangeSize: 500,
         PicOut: []
     };
     OBJMOD.SetBgPic = function () {
@@ -212,7 +212,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         TimeSet: new Date(),
         State: USERSTATE.Walk,
         EnergyMax: 100,
-        Energy: 1
+        Energy: 100
     };
     USER.SetPos = function () {
         USER.RestPostYOri = [20, -12, 2];
@@ -581,7 +581,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
             if (OBJMOD.PicLargekey === "") {
                 //loadkey
-                OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(20, 80);
+                OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(60, 90).split("/").join("");
                 loadBigPic(OBJMOD.PicLargekey);
             }
         }
@@ -778,7 +778,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         f.map(a => {
             loadJSON("data/" + a, function (data) {
                 if (a === "data.json") {
-                    data.Pic.map((a, i) => {
+                    data.pic.map((a, i) => {
                         OBJMOD.Pic.push(new Image());
                         OBJMOD.Pic[i].src = pngaddcode + a;
                     });
