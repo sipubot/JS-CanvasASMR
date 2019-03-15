@@ -384,7 +384,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJITEM.POS["LIKE"][2]
         );
         Canvas.ctx.fillStyle = '#FD0';
-        Canvas.ctx.fillRect(CAN.WIDTH - 140, 13, 104, 10);
+        Canvas.ctx.fillRect(CAN.WIDTH - 140, 13, 104, 8);
         Canvas.ctx.fillStyle = '#e44';
         Canvas.ctx.fillRect(CAN.WIDTH - 38 - USER.Energy, 14, USER.Energy, 6);
     }
@@ -612,14 +612,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 if (OBJMOD.Pos.length - 1 === i) {
                     if (OBJMOD.PicLarge !== "") {
                         Canvas.ctx.drawImage(OBJMOD.PicLarge
-                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2] * 0.33), a[2], a[2] * 0.67);
                     } else {
                         Canvas.ctx.drawImage(OBJMOD.Pic[i]
-                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2] * 0.33), a[2], a[2] * 0.67);
                     }
                 } else {
                     Canvas.ctx.drawImage(OBJMOD.Pic[i]
-                        , (a[0] - (a[2] * 0.5)), (a[1] - a[2]), a[2], a[2] * 0.67);
+                        , (a[0] - (a[2] * 0.5)), (a[1] - a[2] * 0.33), a[2], a[2] * 0.67);
                 }
             }
         });
