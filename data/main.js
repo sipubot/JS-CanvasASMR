@@ -778,6 +778,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         f.map(a => {
             loadJSON("data/" + a, function (data) {
                 if (a === "data.json") {
+                    console.log(data);
                     data.pic.map((a, i) => {
                         OBJMOD.Pic.push(new Image());
                         OBJMOD.Pic[i].src = pngaddcode + a;
