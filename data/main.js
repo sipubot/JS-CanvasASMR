@@ -579,7 +579,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 loadBigPic(OBJMOD.PicLargekey);
             }
         }
-        OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 100);
+        OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 10000);
         if (OBJMOD.Pos[idx][1] - OBJMOD.Pos[idx][2] * 0.33 < 0) {
             OBJMOD.Pos[idx][1] += 0.7;
         }
