@@ -145,6 +145,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
         Path: { x: CAN.WIDTH * 0.5, y: CAN.HORIZONS },
         PathSet: { x: CAN.WIDTH * 0.5, y: CAN.HORIZONS },
         Pic: [],
+        PicKey: [],
         PicLarge: "",
         Pos: [],
         PicSize: 18,
@@ -280,14 +281,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             if (idx === -1) { USER.Target = -1; return; }
             if (USER.Target !== idx) {
                 USER.State = USERSTATE.Turn;
-                USER.TimeSet = new Date();
-                var tempPos = OBJMOD.Pos[idx];
-                var tempPic = OBJMOD.Pic[idx];
-                OBJMOD.Pos.splice(idx, 1);
-                OBJMOD.Pic.splice(idx, 1);
-                OBJMOD.Pos.push(tempPos);
-                OBJMOD.Pic.push(tempPic);
-                USER.Target = OBJMOD.Pos.length - 1;
+                USER.Target = idx;
                 OBJMOD.PathSet.x = x;
                 OBJMOD.PathSet.y = y;
                 loadBigPic("");
@@ -581,12 +575,12 @@ var SipuViewer = (function (SipuViewer, undefined) {
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize * 0.5) {
             if (OBJMOD.PicLargekey === "") {
                 //loadkey
-                OBJMOD.PicLargekey = OBJMOD.Pic[idx].slice(60, 90).split("/").join("");
+                OBJMOD.PicLargekey = OBJMOD.PicKey[idx];
                 loadBigPic(OBJMOD.PicLargekey);
             }
         }
-        OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 10000);
-        if (OBJMOD.Pos[idx][1] - OBJMOD.Pos[idx][2] < 0) {
+        OBJMOD.Pos[idx][2] = OBJMOD.PicSize + (timespan / 100);
+        if (OBJMOD.Pos[idx][1] - OBJMOD.Pos[idx][2] * 0.33 < 0) {
             OBJMOD.Pos[idx][1] += 0.7;
         }
         OBJMOD.Pos.map((a, i) => {
@@ -596,33 +590,30 @@ var SipuViewer = (function (SipuViewer, undefined) {
             }
         });
         if (OBJMOD.Pos[idx][2] > OBJMOD.PicChangeSize) {
-            var outP = OBJMOD.Pic.pop();
-            var outPos = OBJMOD.Pos.pop();
-            OBJMOD.PicOut = [outP, outPos.slice(0)];
+            var outP = OBJMOD.Pic.splice(idx, 1)[0];
+            var outPos = OBJMOD.Pos.splice(idx, 1)[0];
+            OBJMOD.PicKey.splice(idx, 1);
+            OBJMOD.PicOut = [outP, outPos];
             USER.Target = -1;
             loadBigPic("");
         }
     }
     function drawBgPic() {
         OBJMOD.Pos.map((a, i) => {
-            if (a[2] === OBJMOD.PicSize) {
-                Canvas.ctx.drawImage(OBJMOD.Pic[i]
-                    , (a[0] - OBJMOD.PicHarfSize), (a[1] - OBJMOD.PicHarfSize * 0.67), a[2], a[2] * 0.67);
-            } else {
-                if (OBJMOD.Pos.length - 1 === i) {
-                    if (OBJMOD.PicLarge !== "") {
-                        Canvas.ctx.drawImage(OBJMOD.PicLarge
-                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2] * 0.33), a[2], a[2] * 0.67);
-                    } else {
-                        Canvas.ctx.drawImage(OBJMOD.Pic[i]
-                            , (a[0] - (a[2] * 0.5)), (a[1] - a[2] * 0.33), a[2], a[2] * 0.67);
-                    }
-                } else {
-                    Canvas.ctx.drawImage(OBJMOD.Pic[i]
-                        , (a[0] - (a[2] * 0.5)), (a[1] - a[2] * 0.33), a[2], a[2] * 0.67);
-                }
-            }
+            if (i === USER.Target) { return; }
+            Canvas.ctx.drawImage(OBJMOD.Pic[i]
+                , (a[0] - (a[2] * 0.5)), (a[1] - (a[2] * 0.33)), a[2], a[2] * 0.67);
         });
+        if (USER.Target === -1) { return; }
+        var idx = USER.Target;
+        var pos = OBJMOD.Pos[idx];
+        if (OBJMOD.PicLarge !== "") {
+            Canvas.ctx.drawImage(OBJMOD.PicLarge
+                , (pos[0] - (pos[2] * 0.5)), (pos[1] - pos[2] * 0.33), pos[2], pos[2] * 0.67);
+        } else {
+            Canvas.ctx.drawImage(OBJMOD.Pic[idx]
+                , (pos[0] - (pos[2] * 0.5)), (pos[1] - pos[2] * 0.33), pos[2], pos[2] * 0.67);
+        }
     }
     function loadBigPic(key) {
         if (key === "") {
@@ -630,18 +621,20 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.PicLargekey = "";
         } else {
             loadJSON("data/" + key + ".json", function (data) {
-                OBJMOD.PicLarge = "data:image/png;base64," + data.PIC;
+                console.log(data);
+                OBJMOD.PicLarge = new Image();
+                OBJMOD.PicLarge.src = "data:image/png;base64," + data.data;
             });
         }
     }
     function drawBgPicOut() {
         if (OBJMOD.PicOut.length === 0) { return; }
-        if (OBJMOD.PicOut[1][1] < 1) { OBJMOD.PicOut = []; return; }
+        if (OBJMOD.PicOut[1][1] + OBJMOD.PicOut[1][2] * 0.67 < 1) { OBJMOD.PicOut = []; return; }
         Canvas.ctx.drawImage(
             OBJMOD.PicOut[0],
             (OBJMOD.PicOut[1][0] - (OBJMOD.PicOut[1][2] * 0.5)),
-            (OBJMOD.PicOut[1][1] - OBJMOD.PicOut[1][2]),
-            OBJMOD.PicOut[1][2], OBJMOD.PicOut[1][2]
+            (OBJMOD.PicOut[1][1] - OBJMOD.PicOut[1][2] * 0.33),
+            OBJMOD.PicOut[1][2], OBJMOD.PicOut[1][2] * 0.67
         );
         OBJMOD.PicOut[1][1] -= 1;
     }
@@ -659,7 +652,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
                 OBJMOD.Path.x = onside > goal ? onside - gap : onside + gap;
             }
         } else {
-            if (USER.State !== USERSTATE.Walk) { USER.State = USERSTATE.Walk; }
+            if (USER.State !== USERSTATE.Walk) {
+                USER.State = USERSTATE.Walk;
+                USER.TimeSet = new Date();
+            }
         }
     }
     function drawPath() {
@@ -778,9 +774,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         f.map(a => {
             loadJSON("data/" + a, function (data) {
                 if (a === "data.json") {
-                    console.log(data);
                     data.pic.map((a, i) => {
                         OBJMOD.Pic.push(new Image());
+                        OBJMOD.PicKey.push(a.slice(60, 90).split("/").join(""));
                         OBJMOD.Pic[i].src = pngaddcode + a;
                     });
                     OBJMOD.SetBgPic();
