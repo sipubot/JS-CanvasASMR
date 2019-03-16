@@ -620,7 +620,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.PicLarge = "";
             OBJMOD.PicLargekey = "";
         } else {
-            loadJSON("data/" + key + ".json", function (data) {
+            loadJSON("imgdata/" + key + ".json", function (data) {
                 console.log(data);
                 OBJMOD.PicLarge = new Image();
                 OBJMOD.PicLarge.src = "data:image/png;base64," + data.data;
