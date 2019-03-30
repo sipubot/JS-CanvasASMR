@@ -58,10 +58,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
      * view setting
      */
     var dpi = window.devicePixelRatio || 1
-    Canvas.obj.setAttribute('width', Canvas.obj.width * dpi);
-    Canvas.obj.setAttribute('height', Canvas.obj.height * dpi);
-    Canvas.obj.style.width = window.innerWidth + 'px';
-    Canvas.obj.style.height = window.innerHeight + 'px';
+    Canvas.obj.width = window.innerWidth;
+    Canvas.obj.height = window.innerHeight;
+    Canvas.obj.style.width = window.innerWidth * dpi;
+    Canvas.obj.style.height = window.innerHeight * dpi;
     var CAN = {
         WIDTH: Canvas.obj.width,
         HEIGHT: Canvas.obj.height,
