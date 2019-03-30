@@ -54,10 +54,16 @@ var SipuViewer = (function (SipuViewer, undefined) {
     var Canvas = {
         obj: document.getElementById(SipuViewer.init.canvasID)
     };
+    /***
+     * view setting
+     */
+    Canvas.obj.width = window.innerWidth;
+    Canvas.obj.height = window.innerHeight;
     var CAN = {
-        WIDTH: 800,
-        HEIGHT: 600,
-        HORIZONS: 400
+        WIDTH: Canvas.obj.width,
+        HEIGHT: Canvas.obj.height,
+        MIDDLE: Canvas.obj.width * 0.5,
+        HORIZONS: Canvas.obj.height * 0.5
     }
     Canvas.init = function () {
         //init canvas
@@ -133,17 +139,17 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     var OBJMOD = {
         PATHPOINT: {
-            P1TX: 200,
-            P1TY: 450,
-            P1BX: 200,
-            P1BY: 550,
-            P2BX: 400,
-            P2BY: 550,
-            P2TX: 350,
-            P2TY: 450
+            P1TX: CAN.MIDDLE - (CAN.MIDDLE * 0.5),
+            P1TY: CAN.HORIZONS + CAN.HORIZONS * 0.2,
+            P1BX: CAN.MIDDLE - (CAN.MIDDLE * 0.1),
+            P1BY: CAN.HORIZONS + CAN.HORIZONS * 0.8,
+            P2TX: CAN.MIDDLE - (CAN.MIDDLE * 0.3),
+            P2TY: CAN.HORIZONS + CAN.HORIZONS * 0.2,
+            P2BX: CAN.MIDDLE + (CAN.MIDDLE * 0.6),
+            P2BY: CAN.HORIZONS + CAN.HORIZONS * 0.8
         },
-        Path: { x: CAN.WIDTH * 0.5, y: CAN.HORIZONS },
-        PathSet: { x: CAN.WIDTH * 0.5, y: CAN.HORIZONS },
+        Path: { x: CAN.MIDDLE, y: CAN.HORIZONS },
+        PathSet: { x: CAN.MIDDLE, y: CAN.HORIZONS },
         Pic: [],
         PicKey: [],
         PicLarge: "",
@@ -156,7 +162,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     OBJMOD.SetBgPic = function () {
         var len = OBJMOD.Pic.length;
         OBJMOD.Pos = Array.apply(null, Array(len))
-            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(300, 380), OBJMOD.PicSize]);
+            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(CAN.HORIZONS - CAN.HORIZONS * 0.3, CAN.HORIZONS - CAN.HORIZONS * 0.1), OBJMOD.PicSize]);
     };
     var OBJBG = {
         OBJLIST: ["MOUNTAIN2", "CLOUD", "MOON", "STAR", "STONE_A", "STONE_B"],
@@ -166,13 +172,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
         POS: {}
     };
     OBJBG.SetBgObjPos = function () {
-        OBJBG.POS["MOUNTAIN2"] = [CAN.WIDTH * 0.5, 0];
+        OBJBG.POS["MOUNTAIN2"] = [CAN.WIDTH * 0.5, CAN.HORIZONS - CAN.WIDTH * 0.40];
         OBJBG.CPT["CLOUD"] = 10;
         OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
-            .map(a => [getRandomInt(0, 800), getRandomInt(20, 150), getRandomInt(30, 50)]);
+            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(CAN.HORIZONS * 0.1, CAN.HORIZONS * 0.35), getRandomInt(30, 50)]);
         OBJBG.CPT["STAR"] = 30;
         OBJBG.POS["STAR"] = Array.apply(null, Array(OBJBG.CPT["STAR"]))
-            .map(a => [getRandomInt(0, 800), getRandomInt(0, 150), getRandomInt(2, 5)]);
+            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(0, CAN.HORIZONS * 0.35), getRandomInt(2, 5)]);
     };
     var OBJITEM = {
         ITEMTIMER: 0,
@@ -207,7 +213,7 @@ var SipuViewer = (function (SipuViewer, undefined) {
     };
     var USER = {
         PIC: {},
-        Pos: [300, 520, 50],
+        Pos: [CAN.MIDDLE - 20, CAN.HEIGHT - 80, 50],
         MovIdx: 0,
         Target: -1,
         TimeSet: new Date(),
@@ -670,10 +676,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
             OBJMOD.PATHPOINT.P1TY,
             OBJMOD.PATHPOINT.P1BX,
             OBJMOD.PATHPOINT.P1BY,
-            (CAN.WIDTH * 0.5) - 200,
+            (CAN.WIDTH * 0.5) - CAN.MIDDLE * 0.5,
             CAN.HEIGHT
         );
-        Canvas.ctx.lineTo((CAN.WIDTH * 0.5) + 200, CAN.HEIGHT);
+        Canvas.ctx.lineTo((CAN.WIDTH * 0.5) + CAN.MIDDLE * 0.5, CAN.HEIGHT);
         Canvas.ctx.bezierCurveTo(
             OBJMOD.PATHPOINT.P2BX,
             OBJMOD.PATHPOINT.P2BY,
@@ -720,8 +726,9 @@ var SipuViewer = (function (SipuViewer, undefined) {
         });
         Canvas.ctx.globalAlpha = 1;
         var mp = OBJBG.POS["MOUNTAIN2"];
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - CAN.WIDTH, mp[1] + 129, CAN.WIDTH, 300);
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1] + 129, CAN.WIDTH, 300);
+
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - CAN.WIDTH, mp[1], CAN.WIDTH, CAN.MIDDLE);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1], CAN.WIDTH, CAN.MIDDLE);
         //돌 부딫힘 이벤트 고려 하기
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
