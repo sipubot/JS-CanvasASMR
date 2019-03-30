@@ -61,10 +61,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
     Canvas.obj.width = Canvas.obj.clientWidth * dpi;
     Canvas.obj.height = Canvas.obj.clientHeight * dpi;
     var CAN = {
-        WIDTH: Canvas.obj.width,
-        HEIGHT: Canvas.obj.height,
-        MIDDLE: Canvas.obj.width * 0.5,
-        HORIZONS: Canvas.obj.height * 0.5,
+        WIDTH: Canvas.obj.width / dpi,
+        HEIGHT: Canvas.obj.height / dpi,
+        MIDDLE: Canvas.obj.width * 0.5 / dpi,
+        HORIZONS: Canvas.obj.height * 0.5 / dpi,
         DPI: dpi
     }
     Canvas.init = function () {
