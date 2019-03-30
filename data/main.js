@@ -63,12 +63,14 @@ var SipuViewer = (function (SipuViewer, undefined) {
         WIDTH: Canvas.obj.width,
         HEIGHT: Canvas.obj.height,
         MIDDLE: Canvas.obj.width * 0.5,
-        HORIZONS: Canvas.obj.height * 0.5
+        HORIZONS: Canvas.obj.height * 0.5,
+        DPI: window.devicePixelRatio || 1
     }
     Canvas.init = function () {
         //init canvas
         Canvas.ctx = Canvas.obj.getContext("2d");
         Canvas.bound = Canvas.obj.getBoundingClientRect();
+        Canvas.ctx.scale(CAN.DPI, CAN.DPI);
         //init event
         var rc = clickEvent;
         Canvas.obj.addEventListener("click", rc, false);
