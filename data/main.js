@@ -175,10 +175,10 @@ var SipuViewer = (function (SipuViewer, undefined) {
         POS: {}
     };
     OBJBG.SetBgObjPos = function () {
-        OBJBG.POS["MOUNTAIN2"] = [CAN.WIDTH * 0.5, CAN.HORIZONS - CAN.WIDTH * 0.40];
+        OBJBG.POS["MOUNTAIN2"] = [CAN.MIDDLE, CAN.WIDTH * 0.30];
         OBJBG.CPT["CLOUD"] = 10;
         OBJBG.POS["CLOUD"] = Array.apply(null, Array(OBJBG.CPT["CLOUD"]))
-            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(CAN.HORIZONS * 0.1, CAN.HORIZONS * 0.35), getRandomInt(30, 50)]);
+            .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(CAN.HORIZONS * 0.1, CAN.HORIZONS * 0.60), getRandomInt(30, 50)]);
         OBJBG.CPT["STAR"] = 30;
         OBJBG.POS["STAR"] = Array.apply(null, Array(OBJBG.CPT["STAR"]))
             .map(a => [getRandomInt(0, CAN.WIDTH), getRandomInt(0, CAN.HORIZONS * 0.35), getRandomInt(2, 5)]);
@@ -725,13 +725,13 @@ var SipuViewer = (function (SipuViewer, undefined) {
     function drawBgObj() {
         Canvas.ctx.globalAlpha = 1 - COLOR.NOWAIR[3];
         OBJBG.POS["CLOUD"].map(a => {
-            Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], a[0], a[1], a[2], a[2]);
+            Canvas.ctx.drawImage(OBJBG.PIC["CLOUD"], a[0], a[1], a[2], a[2] * 0.6);
         });
         Canvas.ctx.globalAlpha = 1;
         var mp = OBJBG.POS["MOUNTAIN2"];
 
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - CAN.WIDTH, mp[1], CAN.WIDTH, CAN.MIDDLE);
-        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], mp[1], CAN.WIDTH, CAN.MIDDLE);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0] - CAN.WIDTH, CAN.HORIZONS - mp[1], CAN.WIDTH, mp[1]);
+        Canvas.ctx.drawImage(OBJBG.PIC["MOUNTAIN2"], mp[0], CAN.HORIZONS - mp[1], CAN.WIDTH, mp[1]);
         //돌 부딫힘 이벤트 고려 하기
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_A"], 0, 200, 800, 400);
         //Canvas.ctx.drawImage(OBJBG.PIC["STONE_B"], 0, 200, 800, 400);
